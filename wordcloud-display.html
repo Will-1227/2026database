@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>即時文字雲</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    }
+    #header {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    #title {
+      color: rgba(255,255,255,0.75);
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    #status {
+      color: rgba(255,255,255,0.4);
+      font-size: 0.85rem;
+    }
+    #canvas { display: block; }
+    #emptyMsg {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(255,255,255,0.35);
+      font-size: 1.3rem;
+      text-align: center;
+      display: none;
+      line-height: 2;
+    }
+    #clearBtn {
+      position: absolute;
+      bottom: 20px; right: 24px;
+      padding: 8px 18px;
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: none;
+    }
+    #clearBtn:hover { background: rgba(255,80,80,0.3); color: white; }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <div id="title">💬 即時文字雲</div>
+    <div id="status">連線中…</div>
+  </div>
+  <canvas id="canvas"></canvas>
+  <div id="emptyMsg">⏳ 等待關鍵字輸入中…<br><span style="font-size:0.85rem">請用學生頁面輸入關鍵字</span></div>
+  <button id="clearBtn" onclick="clearAll()">🗑 清除全部</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7uHcuYxxo4YFyGj959grg8zlkT1wG4o8",
+      authDomain: "my-firebase-tools.firebaseapp.com",
+      projectId: "my-firebase-tools",
+      storageBucket: "my-firebase-tools.firebasestorage.app",
+      messagingSenderId: "757246006318",
+      appId: "1:757246006318:web:3d5dd95d646eeb38927bbf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const colRef = collection(db, "wordcloud_words");
+
+    const canvas = document.getElementById("canvas");
+    const emptyMsg = document.getElementById("emptyMsg");
+    const statusEl = document.getElementById("status");
+    const clearBtn = document.getElementById("clearBtn");
+
+    // 顯示清除按鈕：URL 帶 ?admin=1
+    if (new URLSearchParams(location.search).get("admin") === "1") {
+      clearBtn.style.display = "block";
+    }
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", () => { resizeCanvas(); redraw(lastWordList); });
+
+    const colors = ["#FF6B9D","#FFD93D","#6BCB77","#4D96FF","#FF6B6B","#C77DFF","#00F5D4","#FF9F1C","#E9C46A","#2EC4B6","#A8DADC","#F4A261"];
+
+    let lastWordList = [];
+
+    function buildWordList(docs) {
+      const freq = {};
+      docs.forEach(d => {
+        const w = (d.data().word || "").trim();
+        if (w) freq[w] = (freq[w] || 0) + 1;
+      });
+      return Object.entries(freq).sort((a, b) => b[1] - a[1]);
+    }
+
+    function redraw(wordList) {
+      if (!wordList || wordList.length === 0) return;
+      const maxFreq = wordList[0][1];
+      const baseSize = Math.min(canvas.width, canvas.height) / 10;
+
+      WordCloud(canvas, {
+        list: wordList,
+        gridSize: Math.round(canvas.width / 60),
+        weightFactor: size => {
+          const ratio = size / maxFreq;
+          return Math.max(16, ratio * baseSize * 1.8);
+        },
+        fontFamily: "-apple-system, 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif",
+        fontWeight: "bold",
+        color: () => colors[Math.floor(Math.random() * colors.length)],
+        rotateRatio: 0.25,
+        rotationSteps: 2,
+        backgroundColor: "#1a1a2e",
+        shuffle: true,
+        drawOutOfBound: false,
+        shrinkToFit: true,
+      });
+    }
+
+    onSnapshot(colRef, (snap) => {
+      statusEl.textContent = `共 ${snap.size} 筆關鍵字`;
+      const wordList = buildWordList(snap.docs);
+      lastWordList = wordList;
+
+      if (wordList.length === 0) {
+        emptyMsg.style.display = "block";
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#1a1a2e";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else {
+        emptyMsg.style.display = "none";
+        redraw(wordList);
+      }
+    });
+
+    // 清除全部（老師用）
+    window.clearAll = async function() {
+      if (!confirm("確定要清除所有關鍵字嗎？")) return;
+      const snap = await getDocs(colRef);
+      const deletes = snap.docs.map(d => deleteDoc(doc(db, "wordcloud_words", d.id)));
+      await Promise.all(deletes);
+    };
+  </script>
+</body>
+</html>

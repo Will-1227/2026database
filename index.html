@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>教學工具集</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .container { max-width: 520px; width: 100%; text-align: center; }
+    h1 { color: white; font-size: 2rem; margin-bottom: 8px; }
+    .subtitle { color: rgba(255,255,255,0.75); margin-bottom: 40px; font-size: 1rem; }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 28px 24px;
+      margin-bottom: 16px;
+      text-decoration: none;
+      display: block;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+    .card-emoji { font-size: 2.4rem; margin-bottom: 10px; }
+    .card-title { font-size: 1.25rem; font-weight: 700; color: #333; margin-bottom: 6px; }
+    .card-desc { color: #888; font-size: 0.9rem; line-height: 1.5; }
+    .tag {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .tag-student { background: #e3f2fd; color: #1565c0; }
+    .tag-teacher { background: #f3e5f5; color: #6a1b9a; }
+    .footer { color: rgba(255,255,255,0.45); font-size: 0.8rem; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎓 教學工具集</h1>
+    <p class="subtitle">Firebase 即時互動工具</p>
+
+    <a class="card" href="wordcloud-input.html">
+      <div class="card-emoji">💬</div>
+      <div class="card-title">文字雲 — 學生輸入</div>
+      <div class="card-desc">輸入關鍵字，即時出現在文字雲上</div>
+      <span class="tag tag-student">📱 學生頁面</span>
+    </a>
+
+    <a class="card" href="wordcloud-display.html">
+      <div class="card-emoji">☁️</div>
+      <div class="card-title">文字雲 — 即時展示</div>
+      <div class="card-desc">即時顯示所有關鍵字，字越多越大</div>
+      <span class="tag tag-teacher">🖥 老師投影</span>
+    </a>
+
+    <p class="footer">Powered by Firebase + Claude Code</p>
+  </div>
+</body>
+</html>

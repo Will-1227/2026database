@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文字雲 - 輸入</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 44px 32px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+      text-align: center;
+    }
+    .emoji { font-size: 3rem; margin-bottom: 12px; }
+    h1 { font-size: 1.7rem; color: #333; margin-bottom: 8px; }
+    .subtitle { color: #888; margin-bottom: 32px; font-size: 0.95rem; }
+    input {
+      width: 100%;
+      font-size: 1.5rem;
+      padding: 18px;
+      border: 2.5px solid #e0e0e0;
+      border-radius: 14px;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      color: #333;
+    }
+    input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102,126,234,0.15);
+    }
+    button {
+      width: 100%;
+      margin-top: 16px;
+      padding: 18px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.03em;
+    }
+    button:hover { opacity: 0.92; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .success {
+      margin-top: 20px;
+      padding: 16px;
+      background: #e8f5e9;
+      border-radius: 12px;
+      color: #2e7d32;
+      font-size: 1rem;
+      font-weight: 500;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .count {
+      margin-top: 16px;
+      color: #bbb;
+      font-size: 0.85rem;
+    }
+    .hint {
+      margin-top: 24px;
+      font-size: 0.8rem;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="emoji">💬</div>
+    <h1>即時文字雲</h1>
+    <p class="subtitle">輸入一個關鍵字，加入即時文字雲！</p>
+    <input type="text" id="wordInput" placeholder="輸入關鍵字…" maxlength="20" autocomplete="off" autofocus>
+    <button id="submitBtn" onclick="submitWord()">送出 →</button>
+    <div class="success" id="successMsg">✅ 已送出！</div>
+    <div class="count" id="countMsg"></div>
+    <div class="hint">按 Enter 也可以送出</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7uHcuYxxo4YFyGj959grg8zlkT1wG4o8",
+      authDomain: "my-firebase-tools.firebaseapp.com",
+      projectId: "my-firebase-tools",
+      storageBucket: "my-firebase-tools.firebasestorage.app",
+      messagingSenderId: "757246006318",
+      appId: "1:757246006318:web:3d5dd95d646eeb38927bbf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const colRef = collection(db, "wordcloud_words");
+
+    // 即時顯示已提交數量
+    onSnapshot(colRef, (snap) => {
+      document.getElementById("countMsg").textContent = `目前共 ${snap.size} 筆關鍵字`;
+    });
+
+    window.submitWord = async function() {
+      const input = document.getElementById("wordInput");
+      const btn = document.getElementById("submitBtn");
+      const successMsg = document.getElementById("successMsg");
+      const word = input.value.trim();
+      if (!word) { input.focus(); return; }
+
+      btn.disabled = true;
+      btn.textContent = "送出中…";
+
+      try {
+        await addDoc(colRef, {
+          word: word,
+          created_at: serverTimestamp()
+        });
+
+        const submitted = word;
+        input.value = "";
+        successMsg.style.display = "block";
+        successMsg.textContent = `✅「${submitted}」已送出！`;
+        setTimeout(() => { successMsg.style.display = "none"; }, 3000);
+      } catch (e) {
+        alert("送出失敗，請確認網路連線：" + e.message);
+      }
+
+      btn.disabled = false;
+      btn.textContent = "送出 →";
+      input.focus();
+    };
+
+    document.getElementById("wordInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") window.submitWord();
+    });
+  </script>
+</body>
+</html>
