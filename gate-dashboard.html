@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>保衛室 — 今日訪客</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: #1a1d2e;
+      color: #eaeaea;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .topbar {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 14px 22px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .topbar h1 { font-size: 1.3rem; }
+    .topbar .clock { font-size: 1.05rem; font-weight: 600; letter-spacing: 0.04em; }
+    .topbar .user { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; }
+    .topbar button {
+      background: rgba(255,255,255,0.2);
+      color: white; border: none;
+      padding: 7px 12px; border-radius: 8px;
+      cursor: pointer; font-size: 0.85rem;
+    }
+    .topbar button:hover { background: rgba(255,255,255,0.3); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: #252840;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+    }
+    .panel h2 {
+      font-size: 1rem;
+      color: #aab;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* 掃描器 */
+    #scanner { width: 100%; max-width: 320px; margin: 0 auto; }
+    .scan-result {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #1a1d2e;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      min-height: 60px;
+    }
+    .scan-result.success { background: #1b3a2e; color: #7fe9a8; }
+    .scan-result.error { background: #3a1b1f; color: #ff8b94; }
+
+    .scanner-actions { margin-top: 12px; display: flex; gap: 8px; }
+    .scanner-actions button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      background: #667eea;
+      color: white;
+    }
+    .scanner-actions button:hover { opacity: 0.9; }
+    .scanner-actions button.stop { background: #666; }
+
+    /* 訪客清單 */
+    .visitor-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid #34374e;
+    }
+    .visitor-row:last-child { border-bottom: none; }
+    .visitor-row .name { font-size: 1.05rem; font-weight: 700; color: #fff; }
+    .visitor-row .meta { font-size: 0.85rem; color: #aab; margin-top: 3px; line-height: 1.5; }
+    .status {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+    .status-pending   { background: #4a3a1d; color: #ffb74d; }
+    .status-approved  { background: #1d4a2e; color: #81c784; }
+    .status-checkedIn { background: #1d3a4a; color: #64b5f6; }
+    .status-cancelled { background: #4a1d24; color: #ef5350; }
+    .visitor-row .actions button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: white;
+    }
+    .btn-checkin { background: #2e7d32; }
+    .btn-checkout { background: #555; }
+
+    .empty { text-align: center; color: #667; padding: 30px; font-size: 0.95rem; }
+
+    /* 登入畫面 */
+    .login-card {
+      background: #252840;
+      border-radius: 16px;
+      padding: 40px 30px;
+      max-width: 380px;
+      margin: 80px auto 0;
+      text-align: center;
+    }
+    .login-card h2 { margin-bottom: 12px; color: #fff; }
+    .login-card p { color: #aab; margin-bottom: 24px; font-size: 0.9rem; }
+    .google-btn {
+      width: 100%;
+      padding: 14px;
+      background: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #555;
+    }
+    .footer-link { text-align: center; margin-top: 18px; font-size: 0.85rem; }
+    .footer-link a { color: #9aaef0; text-decoration: none; }
+
+    .badge {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    /* html5-qrcode 內部樣式覆寫 */
+    #scanner button { background: #667eea !important; color: white !important; border-radius: 8px !important; }
+    #scanner select { color: #333 !important; }
+  </style>
+</head>
+<body>
+
+  <div id="loginView" style="display:none;">
+    <div class="login-card">
+      <h2>🛡 保衛室登入</h2>
+      <p>請以保衛室專用 Google 帳號登入</p>
+      <button class="google-btn" onclick="signIn()">使用 Google 登入</button>
+      <div class="footer-link"><a href="visitor-index.html">← 回首頁</a></div>
+    </div>
+  </div>
+
+  <div id="mainView" style="display:none;">
+    <div class="topbar">
+      <h1>🛡 保衛室 — 今日訪客 <span id="todayCount" class="badge">0</span></h1>
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="user">
+        <span id="userEmail"></span>
+        <button onclick="signOutClick()">登出</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- 左欄：掃 QR + 結果 -->
+      <div>
+        <div class="panel">
+          <h2>📷 掃描 QR Code</h2>
+          <div id="scanner"></div>
+          <div class="scanner-actions">
+            <button id="startBtn" onclick="startScanner()">啟動相機</button>
+            <button id="stopBtn" class="stop" onclick="stopScanner()" style="display:none;">停止</button>
+          </div>
+          <div id="scanResult" class="scan-result">尚未掃描</div>
+        </div>
+      </div>
+
+      <!-- 右欄：今日清單 -->
+      <div>
+        <div class="panel">
+          <h2>📋 今日預約名單</h2>
+          <div id="visitorList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, Timestamp }
+      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7uHcuYxxo4YFyGj959grg8zlkT1wG4o8",
+      authDomain: "my-firebase-tools.firebaseapp.com",
+      projectId: "my-firebase-tools",
+      storageBucket: "my-firebase-tools.firebasestorage.app",
+      messagingSenderId: "757246006318",
+      appId: "1:757246006318:web:3d5dd95d646eeb38927bbf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const STATUS_LABEL = {
+      pending:    { text: "待核可", cls: "status-pending" },
+      approved:   { text: "已核可", cls: "status-approved" },
+      checkedIn:  { text: "已報到", cls: "status-checkedIn" },
+      checkedOut: { text: "已離場", cls: "status-checkedIn" },
+      cancelled:  { text: "已取消", cls: "status-cancelled" }
+    };
+
+    let todayVisitors = [];
+
+    function pad(n) { return String(n).padStart(2, "0"); }
+    function fmtTime(ts) {
+      if (!ts || !ts.toDate) return "—";
+      const d = ts.toDate();
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c =>
+        ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    }
+
+    // 時鐘
+    function updateClock() {
+      const d = new Date();
+      document.getElementById("clock").textContent =
+        `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function renderList() {
+      const el = document.getElementById("visitorList");
+      document.getElementById("todayCount").textContent = todayVisitors.length;
+
+      if (todayVisitors.length === 0) {
+        el.innerHTML = `<div class="empty">今日尚無預約紀錄</div>`;
+        return;
+      }
+
+      // 排序：報到中 → 已核可 → 待核可 → 已離場/取消
+      const order = { checkedIn: 0, approved: 1, pending: 2, checkedOut: 3, cancelled: 4 };
+      const sorted = [...todayVisitors].sort((a,b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
+
+      el.innerHTML = sorted.map(v => {
+        const label = STATUS_LABEL[v.status] || STATUS_LABEL.pending;
+        let actionBtn = "";
+        if (v.status === "approved") {
+          actionBtn = `<button class="btn-checkin" onclick="checkIn('${v.id}')">✓ 報到</button>`;
+        } else if (v.status === "checkedIn") {
+          actionBtn = `<button class="btn-checkout" onclick="checkOut('${v.id}')">離場</button>`;
+        }
+        return `
+          <div class="visitor-row">
+            <div>
+              <div>
+                <span class="name">${escapeHtml(v.name)}</span>
+                <span class="status ${label.cls}">${label.text}</span>
+              </div>
+              <div class="meta">
+                🕐 ${fmtTime(v.visitAt)}
+                · ${escapeHtml(v.company || "個人")}
+                · 受訪：${escapeHtml(v.hostName)}
+                ${v.plateNumber ? "<br>🚗 " + escapeHtml(v.plateNumber) : ""}
+              </div>
+            </div>
+            <div class="actions">${actionBtn}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.checkIn = async function(id) {
+      try {
+        await updateDoc(doc(db, "visitors", id), {
+          status: "checkedIn",
+          checkedInAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      } catch (e) { alert("報到失敗：" + e.message); }
+    };
+
+    window.checkOut = async function(id) {
+      try {
+        await updateDoc(doc(db, "visitors", id), {
+          status: "checkedOut",
+          checkedOutAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      } catch (e) { alert("離場失敗：" + e.message); }
+    };
+
+    // ---- QR 掃描 ----
+    let html5QrCode = null;
+
+    function showScanResult(html, type = "") {
+      const el = document.getElementById("scanResult");
+      el.innerHTML = html;
+      el.className = "scan-result" + (type ? " " + type : "");
+    }
+
+    function extractToken(text) {
+      // QR 編碼為 visitor-confirm.html?token=xxx，但也接受純 token
+      try {
+        const u = new URL(text);
+        const t = u.searchParams.get("token");
+        if (t) return t;
+      } catch {}
+      // 若不是 URL，把整段當 token
+      return text.trim();
+    }
+
+    async function handleScanned(text) {
+      const token = extractToken(text);
+      if (!token) {
+        showScanResult("⚠ 無法解析 QR 內容", "error");
+        return;
+      }
+      const match = todayVisitors.find(v => v.qrToken === token);
+      if (!match) {
+        showScanResult(`❌ 找不到此 QR 對應的預約<br><small>${escapeHtml(token).slice(0, 20)}…</small>`, "error");
+        return;
+      }
+      const label = STATUS_LABEL[match.status]?.text || match.status;
+      let action = "";
+      if (match.status === "approved") {
+        try {
+          await updateDoc(doc(db, "visitors", match.id), {
+            status: "checkedIn",
+            checkedInAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+          action = "<br>✅ 已自動報到";
+        } catch (e) {
+          action = "<br>⚠ 報到失敗：" + e.message;
+        }
+      } else if (match.status === "pending") {
+        action = "<br>⏳ 此預約尚未核可，請聯絡受訪人員";
+      } else if (match.status === "checkedIn") {
+        action = "<br>ℹ 此訪客已報到過";
+      } else if (match.status === "cancelled") {
+        action = "<br>⛔ 此預約已取消";
+      }
+      showScanResult(`
+        <strong>${escapeHtml(match.name)}</strong> ・ ${label}<br>
+        ${escapeHtml(match.company || "")} → ${escapeHtml(match.hostName)}
+        ${action}
+      `, match.status === "approved" || match.status === "checkedIn" ? "success" : "error");
+    }
+
+    window.startScanner = async function() {
+      if (!window.Html5Qrcode) {
+        alert("QR 掃描器未載入");
+        return;
+      }
+      try {
+        html5QrCode = new Html5Qrcode("scanner");
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 240, height: 240 } },
+          (decoded) => {
+            handleScanned(decoded);
+          },
+          () => {} // 掃描錯誤忽略
+        );
+        document.getElementById("startBtn").style.display = "none";
+        document.getElementById("stopBtn").style.display = "block";
+      } catch (e) {
+        alert("無法啟動相機：" + e.message);
+      }
+    };
+
+    window.stopScanner = async function() {
+      if (html5QrCode) {
+        try { await html5QrCode.stop(); await html5QrCode.clear(); } catch {}
+        html5QrCode = null;
+      }
+      document.getElementById("startBtn").style.display = "block";
+      document.getElementById("stopBtn").style.display = "none";
+    };
+
+    window.signIn = async function() {
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (e) { alert("登入失敗：" + e.message); }
+    };
+
+    window.signOutClick = async function() {
+      if (html5QrCode) await window.stopScanner();
+      await signOut(auth);
+    };
+
+    // ---- 監聽今日訪客 ----
+    let unsub = null;
+    function subscribeToday() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+      const q = query(
+        collection(db, "visitors"),
+        where("visitAt", ">=", Timestamp.fromDate(start)),
+        where("visitAt", "<=", Timestamp.fromDate(end)),
+        orderBy("visitAt", "asc")
+      );
+      unsub = onSnapshot(q, snap => {
+        todayVisitors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderList();
+      }, err => {
+        console.error(err);
+        document.getElementById("visitorList").innerHTML =
+          `<div class="empty">讀取失敗：${escapeHtml(err.message)}</div>`;
+      });
+    }
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById("loginView").style.display = "none";
+        document.getElementById("mainView").style.display = "block";
+        document.getElementById("userEmail").textContent = user.email;
+        subscribeToday();
+      } else {
+        if (unsub) { unsub(); unsub = null; }
+        document.getElementById("loginView").style.display = "block";
+        document.getElementById("mainView").style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>

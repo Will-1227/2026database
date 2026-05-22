@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>訪客預約系統</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .container { max-width: 520px; width: 100%; text-align: center; }
+    h1 { color: white; font-size: 2rem; margin-bottom: 8px; }
+    .subtitle { color: rgba(255,255,255,0.78); margin-bottom: 32px; font-size: 1rem; }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 28px 24px;
+      margin-bottom: 16px;
+      text-decoration: none;
+      display: block;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+    .card-emoji { font-size: 2.4rem; margin-bottom: 10px; }
+    .card-title { font-size: 1.25rem; font-weight: 700; color: #333; margin-bottom: 6px; }
+    .card-desc { color: #888; font-size: 0.9rem; line-height: 1.55; }
+    .tag {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .tag-visitor { background: #fff3e0; color: #e65100; }
+    .tag-staff   { background: #e8f5e9; color: #2e7d32; }
+    .tag-guard   { background: #e8eaf6; color: #283593; }
+    .footer { color: rgba(255,255,255,0.5); font-size: 0.8rem; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛡 訪客預約系統</h1>
+    <p class="subtitle">Firebase 雲端訪客管理</p>
+
+    <a class="card" href="visitor-book.html">
+      <div class="card-emoji">📝</div>
+      <div class="card-title">訪客預約登記</div>
+      <div class="card-desc">外部訪客填表，立即取得到訪 QR Code</div>
+      <span class="tag tag-visitor">🌐 公開頁面</span>
+    </a>
+
+    <a class="card" href="staff-approve.html">
+      <div class="card-emoji">📋</div>
+      <div class="card-title">員工核可</div>
+      <div class="card-desc">受訪員工 / 主管核可預約、檢視紀錄</div>
+      <span class="tag tag-staff">🔐 需登入</span>
+    </a>
+
+    <a class="card" href="gate-dashboard.html">
+      <div class="card-emoji">🛡</div>
+      <div class="card-title">保衛室控台</div>
+      <div class="card-desc">今日訪客名單、掃 QR 自動報到</div>
+      <span class="tag tag-guard">🔐 需登入</span>
+    </a>
+
+    <p class="footer">Powered by Firebase + Claude Code</p>
+  </div>
+</body>
+</html>

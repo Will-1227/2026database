@@ -2,13 +2,38 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 你的第一個集合：任何人可讀寫
-    // 之後新增工具時在這裡加更多 match 區塊
+    // 文字雲：任何人可讀寫
     match /wordcloud_words/{document} {
       allow read, write: if true;
     }
 
-    // 其他集合預設禁止存取
+    // 訪客預約
+    //  create: 任何人可建立（必須帶 pending 狀態與 qrToken、姓名、受訪者）
+    //  read:   任何人可讀（訪客憑 token 查自己、保衛室列出今日清單）
+    //  update: 僅登入使用者可更新（核可、報到、退件）
+    //  delete: 禁止（保留稽核紀錄）
+    match /visitors/{visitorId} {
+      allow create: if request.resource.data.status == 'pending'
+                    && request.resource.data.qrToken is string
+                    && request.resource.data.name is string
+                    && request.resource.data.hostName is string;
+      allow read: if true;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
+
+    // VIP 名冊：僅登入使用者可讀寫
+    match /vips/{vipId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // 員工檔案：登入者可讀，本人可寫
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 其他集合預設禁止
     match /{document=**} {
       allow read, write: if false;
     }
