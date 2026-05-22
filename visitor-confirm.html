@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>預約確認</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 32px 28px;
+      max-width: 460px;
+      width: 100%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    }
+    .header { text-align: center; margin-bottom: 18px; }
+    .emoji { font-size: 2.4rem; margin-bottom: 6px; }
+    h1 { font-size: 1.45rem; color: #333; margin-bottom: 6px; }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .status-pending   { background: #fff3e0; color: #e65100; }
+    .status-approved  { background: #e8f5e9; color: #2e7d32; }
+    .status-checkedIn { background: #e3f2fd; color: #1565c0; }
+    .status-cancelled { background: #ffebee; color: #c62828; }
+    .qr-wrap {
+      background: #fafafa;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      margin: 18px 0;
+    }
+    #qrcode { display: inline-block; padding: 8px; background: white; border-radius: 8px; }
+    #qrcode canvas { display: block; }
+    .info {
+      background: #f5f5f7;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: #444;
+    }
+    .info .row { display: flex; gap: 8px; }
+    .info .label { color: #888; min-width: 72px; }
+    .info .value { font-weight: 600; color: #333; flex: 1; }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .btn {
+      flex: 1;
+      padding: 14px;
+      font-size: 0.98rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      color: white;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .btn-secondary { background: #555; }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .hint {
+      margin-top: 16px;
+      padding: 12px;
+      background: #fff8e1;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      color: #795548;
+      line-height: 1.55;
+    }
+    .loading, .error {
+      text-align: center;
+      padding: 40px 20px;
+      color: #888;
+    }
+    .error { color: #c62828; }
+    .footer-link {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.85rem;
+    }
+    .footer-link a { color: #667eea; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="loading" class="loading">載入中…</div>
+    <div id="error" class="error" style="display:none;"></div>
+    <div id="content" style="display:none;">
+      <div class="header">
+        <div class="emoji">✅</div>
+        <h1>預約已送出</h1>
+        <div id="statusBadge" class="status status-pending">等待核可</div>
+      </div>
+
+      <div class="qr-wrap">
+        <div id="qrcode"></div>
+        <p style="margin-top:12px; color:#888; font-size:0.85rem;">到訪時請出示此 QR 碼</p>
+      </div>
+
+      <div class="info" id="infoBlock"></div>
+
+      <div class="actions">
+        <a id="downloadBtn" class="btn btn-primary" download="visitor-qr.png">⬇ 下載 QR</a>
+        <button class="btn btn-secondary" onclick="downloadICS()">📅 加入行事曆</button>
+      </div>
+
+      <div class="hint">
+        💡 請將此頁面網址加入書籤或截圖保存。<br>
+        到訪當日由保衛室掃描此 QR 即可完成報到。
+      </div>
+
+      <div class="footer-link">
+        <a href="visitor-book.html">+ 再預約一筆</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getFirestore, collection, query, where, onSnapshot, limit }
+      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7uHcuYxxo4YFyGj959grg8zlkT1wG4o8",
+      authDomain: "my-firebase-tools.firebaseapp.com",
+      projectId: "my-firebase-tools",
+      storageBucket: "my-firebase-tools.firebasestorage.app",
+      messagingSenderId: "757246006318",
+      appId: "1:757246006318:web:3d5dd95d646eeb38927bbf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+
+    const STATUS_LABEL = {
+      pending:    { text: "等待核可", cls: "status-pending" },
+      approved:   { text: "已核可，可到訪", cls: "status-approved" },
+      checkedIn:  { text: "已報到", cls: "status-checkedIn" },
+      checkedOut: { text: "已離場", cls: "status-checkedIn" },
+      cancelled:  { text: "已取消", cls: "status-cancelled" }
+    };
+
+    function fmt(ts) {
+      if (!ts || !ts.toDate) return "—";
+      const d = ts.toDate();
+      const pad = n => String(n).padStart(2, "0");
+      return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    let visitData = null;
+
+    function render(data) {
+      visitData = data;
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("content").style.display = "block";
+
+      const label = STATUS_LABEL[data.status] || STATUS_LABEL.pending;
+      const badge = document.getElementById("statusBadge");
+      badge.textContent = label.text;
+      badge.className = "status " + label.cls;
+
+      const info = document.getElementById("infoBlock");
+      info.innerHTML = `
+        <div class="row"><span class="label">訪客</span><span class="value">${escapeHtml(data.name)}</span></div>
+        <div class="row"><span class="label">公司</span><span class="value">${escapeHtml(data.company || "—")}</span></div>
+        <div class="row"><span class="label">受訪</span><span class="value">${escapeHtml(data.hostName)}</span></div>
+        <div class="row"><span class="label">時間</span><span class="value">${fmt(data.visitAt)}</span></div>
+        ${data.plateNumber ? `<div class="row"><span class="label">車牌</span><span class="value">${escapeHtml(data.plateNumber)}</span></div>` : ""}
+      `;
+
+      // 產生 QR：編碼為「回到此確認頁的網址」
+      const qrUrl = `${location.origin}${location.pathname}?token=${encodeURIComponent(token)}`;
+      const qrEl = document.getElementById("qrcode");
+      qrEl.innerHTML = "";
+
+      QRCode.toCanvas(qrUrl, { width: 240, margin: 1 }, (err, canvas) => {
+        if (err) { console.error(err); return; }
+        qrEl.appendChild(canvas);
+        // 提供下載
+        QRCode.toDataURL(qrUrl, { width: 720, margin: 2 }, (e2, dataUrl) => {
+          if (e2) return;
+          const a = document.getElementById("downloadBtn");
+          a.href = dataUrl;
+          a.download = `visitor-qr-${data.name}.png`;
+        });
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c =>
+        ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    }
+
+    function showError(msg) {
+      document.getElementById("loading").style.display = "none";
+      const el = document.getElementById("error");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+
+    window.downloadICS = function() {
+      if (!visitData) return;
+      const start = visitData.visitAt.toDate();
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+      const toICS = d => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+      const ics = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//visitor-system//TW",
+        "BEGIN:VEVENT",
+        `UID:${token}@visitor-system`,
+        `DTSTAMP:${toICS(new Date())}`,
+        `DTSTART:${toICS(start)}`,
+        `DTEND:${toICS(end)}`,
+        `SUMMARY:訪客到訪 — ${visitData.company || visitData.name}`,
+        `DESCRIPTION:訪客 ${visitData.name} 拜訪 ${visitData.hostName}`,
+        "END:VEVENT",
+        "END:VCALENDAR"
+      ].join("\r\n");
+      const blob = new Blob([ics], { type: "text/calendar" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `visit-${visitData.name}.ics`;
+      a.click();
+    };
+
+    if (!token) {
+      showError("缺少 token，無法顯示預約資料");
+    } else {
+      const q = query(collection(db, "visitors"), where("qrToken", "==", token), limit(1));
+      onSnapshot(q, snap => {
+        if (snap.empty) {
+          showError("找不到此預約紀錄");
+          return;
+        }
+        render(snap.docs[0].data());
+      }, err => showError("讀取失敗：" + err.message));
+    }
+  </script>
+</body>
+</html>

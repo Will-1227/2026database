@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>訪客預約登記</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 36px 28px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    }
+    .header { text-align: center; margin-bottom: 24px; }
+    .emoji { font-size: 2.6rem; margin-bottom: 8px; }
+    h1 { font-size: 1.55rem; color: #333; margin-bottom: 6px; }
+    .subtitle { color: #888; font-size: 0.92rem; }
+    label {
+      display: block;
+      font-size: 0.88rem;
+      color: #555;
+      margin: 14px 0 6px;
+      font-weight: 600;
+    }
+    label .req { color: #e53935; }
+    input, textarea {
+      width: 100%;
+      font-size: 1rem;
+      padding: 12px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      color: #333;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+    }
+    textarea { resize: vertical; min-height: 60px; }
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+    button {
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px;
+      font-size: 1.05rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    button:hover { opacity: 0.92; transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .consent {
+      margin-top: 18px;
+      padding: 12px;
+      background: #f5f5f7;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: #666;
+      line-height: 1.55;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .consent input { width: auto; margin-top: 3px; }
+    .error {
+      margin-top: 12px;
+      padding: 12px;
+      background: #ffebee;
+      border-radius: 10px;
+      color: #c62828;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .footer-link {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 0.85rem;
+    }
+    .footer-link a { color: #667eea; text-decoration: none; }
+
+    /* 送出成功後的確認區 */
+    .confirm-header { text-align: center; margin-bottom: 18px; }
+    .confirm-header .emoji { font-size: 2.6rem; }
+    .confirm-header h2 { font-size: 1.4rem; color: #333; margin: 4px 0; }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: #fff3e0;
+      color: #e65100;
+      margin-top: 4px;
+    }
+    .qr-wrap {
+      background: #fafafa;
+      border-radius: 16px;
+      padding: 22px;
+      text-align: center;
+      margin: 16px 0;
+    }
+    #qrcode { display: inline-block; padding: 8px; background: white; border-radius: 8px; }
+    #qrcode canvas { display: block; }
+    .info-block {
+      background: #f5f5f7;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: #444;
+    }
+    .info-block .info-row { display: flex; gap: 8px; }
+    .info-block .label { color: #888; min-width: 64px; }
+    .info-block .value { font-weight: 600; color: #333; flex: 1; }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .btn {
+      flex: 1;
+      padding: 14px;
+      font-size: 0.98rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      color: white;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .btn-secondary { background: #555; }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .share-link {
+      margin-top: 14px;
+      padding: 12px;
+      background: #eef1ff;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: #444;
+      word-break: break-all;
+      line-height: 1.55;
+    }
+    .share-link button {
+      margin-top: 6px;
+      padding: 6px 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      width: auto;
+    }
+    .hint {
+      margin-top: 14px;
+      padding: 12px;
+      background: #fff8e1;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      color: #795548;
+      line-height: 1.55;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="formCard">
+    <div class="header">
+      <div class="emoji">📝</div>
+      <h1>訪客預約登記</h1>
+      <p class="subtitle">填寫資料後即可取得到訪 QR Code</p>
+    </div>
+
+    <label>姓名 <span class="req">*</span></label>
+    <input type="text" id="name" placeholder="您的姓名" maxlength="40" autocomplete="name">
+
+    <div class="row">
+      <div>
+        <label>電話 <span class="req">*</span></label>
+        <input type="tel" id="phone" placeholder="0912345678" maxlength="20" autocomplete="tel">
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" id="email" placeholder="optional" maxlength="60" autocomplete="email">
+      </div>
+    </div>
+
+    <label>公司 / 單位</label>
+    <input type="text" id="company" placeholder="例如：ABC 股份有限公司" maxlength="60">
+
+    <label>受訪員工 <span class="req">*</span></label>
+    <input type="text" id="hostName" placeholder="您要拜訪的同仁姓名" maxlength="40">
+
+    <div class="row">
+      <div>
+        <label>預計到訪 <span class="req">*</span></label>
+        <input type="datetime-local" id="visitAt">
+      </div>
+      <div>
+        <label>車牌（如有）</label>
+        <input type="text" id="plateNumber" placeholder="ABC-1234" maxlength="15">
+      </div>
+    </div>
+
+    <label>備註</label>
+    <textarea id="note" placeholder="會議主題、攜帶物品等" maxlength="200"></textarea>
+
+    <div class="consent">
+      <input type="checkbox" id="consent">
+      <label for="consent" style="margin:0; font-weight:400; color:#666;">
+        我同意提供以上資料供本次到訪用途；資料將於 6 個月後自動刪除。
+      </label>
+    </div>
+
+    <div class="error" id="errorMsg"></div>
+
+    <button id="submitBtn" onclick="submitBooking()">送出預約 →</button>
+
+    <div class="footer-link">
+      <a href="visitor-index.html">← 回首頁</a>
+    </div>
+  </div>
+
+  <!-- 送出成功後顯示 -->
+  <div class="card" id="confirmCard" style="display:none;">
+    <div class="confirm-header">
+      <div class="emoji">✅</div>
+      <h2>預約已送出</h2>
+      <div class="status-badge">等待核可</div>
+    </div>
+
+    <div class="qr-wrap">
+      <div id="qrcode"></div>
+      <p style="margin-top:12px; color:#888; font-size:0.85rem;">到訪時請出示此 QR 碼</p>
+    </div>
+
+    <div class="info-block" id="infoBlock"></div>
+
+    <div class="actions">
+      <a id="downloadBtn" class="btn btn-primary" download="visitor-qr.png">⬇ 下載 QR</a>
+      <button class="btn btn-secondary" onclick="downloadICS()">📅 加入行事曆</button>
+    </div>
+
+    <div class="share-link" id="shareLinkBox">
+      <strong>📎 可分享連結：</strong><br>
+      <span id="shareLink"></span><br>
+      <button onclick="copyLink()">複製連結</button>
+    </div>
+
+    <div class="hint">
+      💡 請截圖保存 QR，或複製上方連結保存。<br>
+      到訪當日由保衛室掃描 QR 即可完成報到。
+    </div>
+
+    <div class="footer-link">
+      <a href="visitor-book.html">+ 再預約一筆</a>　·　<a href="visitor-index.html">回首頁</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7uHcuYxxo4YFyGj959grg8zlkT1wG4o8",
+      authDomain: "my-firebase-tools.firebaseapp.com",
+      projectId: "my-firebase-tools",
+      storageBucket: "my-firebase-tools.firebasestorage.app",
+      messagingSenderId: "757246006318",
+      appId: "1:757246006318:web:3d5dd95d646eeb38927bbf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const colRef = collection(db, "visitors");
+
+    // 預設預約時間為 1 小時後
+    (function setDefaultTime() {
+      const d = new Date(Date.now() + 60 * 60 * 1000);
+      d.setMinutes(0, 0, 0);
+      const pad = n => String(n).padStart(2, "0");
+      const value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      document.getElementById("visitAt").value = value;
+    })();
+
+    function showError(msg) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+
+    window.submitBooking = async function() {
+      const data = {
+        name: document.getElementById("name").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        company: document.getElementById("company").value.trim(),
+        hostName: document.getElementById("hostName").value.trim(),
+        visitAtStr: document.getElementById("visitAt").value,
+        plateNumber: document.getElementById("plateNumber").value.trim(),
+        note: document.getElementById("note").value.trim()
+      };
+      const consent = document.getElementById("consent").checked;
+
+      document.getElementById("errorMsg").style.display = "none";
+
+      if (!data.name) return showError("請填寫姓名");
+      if (!data.phone) return showError("請填寫電話");
+      if (!data.hostName) return showError("請填寫受訪員工");
+      if (!data.visitAtStr) return showError("請選擇預計到訪時間");
+      if (!consent) return showError("請勾選同意條款");
+
+      const visitAt = new Date(data.visitAtStr);
+      if (isNaN(visitAt.getTime())) return showError("到訪時間格式錯誤");
+
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.textContent = "送出中…";
+
+      try {
+        const qrToken = (crypto.randomUUID ? crypto.randomUUID()
+                          : Math.random().toString(36).slice(2) + Date.now().toString(36));
+
+        await addDoc(colRef, {
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          company: data.company,
+          hostName: data.hostName,
+          visitAt: Timestamp.fromDate(visitAt),
+          plateNumber: data.plateNumber,
+          note: data.note,
+          status: "pending",
+          source: "pre-registered",
+          qrToken: qrToken,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          approvedAt: null,
+          approvedBy: null,
+          checkedInAt: null,
+          checkedOutAt: null
+        });
+
+        showConfirmation(qrToken, data, visitAt);
+      } catch (e) {
+        showError("送出失敗：" + e.message);
+        btn.disabled = false;
+        btn.textContent = "送出預約 →";
+      }
+    };
+
+    // 送出成功後在同頁顯示 QR 與分享連結
+    let bookingState = null;
+
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c =>
+        ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    }
+
+    function showConfirmation(qrToken, data, visitAt) {
+      bookingState = { qrToken, data, visitAt };
+
+      document.getElementById("formCard").style.display = "none";
+      document.getElementById("confirmCard").style.display = "block";
+      window.scrollTo(0, 0);
+
+      // 組可分享網址（需要正常 http/https 環境）
+      const shareUrl = buildShareUrl(qrToken);
+      const shareLinkBox = document.getElementById("shareLinkBox");
+      if (shareUrl) {
+        document.getElementById("shareLink").textContent = shareUrl;
+        shareLinkBox.style.display = "block";
+      } else {
+        shareLinkBox.style.display = "none";
+      }
+
+      // 訊息卡
+      const fmt = d => {
+        const pad = n => String(n).padStart(2, "0");
+        return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      };
+      document.getElementById("infoBlock").innerHTML = `
+        <div class="info-row"><span class="label">訪客</span><span class="value">${escapeHtml(data.name)}</span></div>
+        <div class="info-row"><span class="label">公司</span><span class="value">${escapeHtml(data.company || "—")}</span></div>
+        <div class="info-row"><span class="label">受訪</span><span class="value">${escapeHtml(data.hostName)}</span></div>
+        <div class="info-row"><span class="label">時間</span><span class="value">${fmt(visitAt)}</span></div>
+        ${data.plateNumber ? `<div class="info-row"><span class="label">車牌</span><span class="value">${escapeHtml(data.plateNumber)}</span></div>` : ""}
+      `;
+
+      // QR 內容：有完整網址就編 URL（手機掃會自動開頁面），否則編純 token
+      const qrContent = shareUrl || qrToken;
+      const qrEl = document.getElementById("qrcode");
+      qrEl.innerHTML = "";
+      QRCode.toCanvas(qrContent, { width: 240, margin: 1 }, (err, canvas) => {
+        if (err) {
+          console.error("QR encode failed:", err);
+          qrEl.innerHTML = `<div style="padding:30px; color:#888;">QR 產生失敗：${escapeHtml(err.message)}</div>`;
+          return;
+        }
+        qrEl.appendChild(canvas);
+        QRCode.toDataURL(qrContent, { width: 720, margin: 2 }, (e2, dataUrl) => {
+          if (e2) return;
+          const a = document.getElementById("downloadBtn");
+          a.href = dataUrl;
+          a.download = `visitor-qr-${data.name}.png`;
+        });
+      });
+    }
+
+    // 只在正常 http/https 環境產生分享連結；沙箱（data: / blob: / file:）回 null
+    function buildShareUrl(qrToken) {
+      const proto = location.protocol;
+      if (proto !== "http:" && proto !== "https:") return null;
+      const base = location.href.split("?")[0].replace(/visitor-book\.html$/, "");
+      return `${base}visitor-confirm.html?token=${encodeURIComponent(qrToken)}`;
+    }
+
+    window.copyLink = async function() {
+      const text = document.getElementById("shareLink").textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("連結已複製");
+      } catch {
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); alert("連結已複製"); }
+        catch { alert("請手動長按連結複製"); }
+        ta.remove();
+      }
+    };
+
+    window.downloadICS = function() {
+      if (!bookingState) return;
+      const { qrToken, data, visitAt } = bookingState;
+      const end = new Date(visitAt.getTime() + 60 * 60 * 1000);
+      const toICS = d => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+      const ics = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//visitor-system//TW",
+        "BEGIN:VEVENT",
+        `UID:${qrToken}@visitor-system`,
+        `DTSTAMP:${toICS(new Date())}`,
+        `DTSTART:${toICS(visitAt)}`,
+        `DTEND:${toICS(end)}`,
+        `SUMMARY:訪客到訪 — ${data.company || data.name}`,
+        `DESCRIPTION:訪客 ${data.name} 拜訪 ${data.hostName}`,
+        "END:VEVENT",
+        "END:VCALENDAR"
+      ].join("\r\n");
+      const blob = new Blob([ics], { type: "text/calendar" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `visit-${data.name}.ics`;
+      a.click();
+    };
+  </script>
+</body>
+</html>

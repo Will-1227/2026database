@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>員工核可 — 訪客預約</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: #f4f5f9;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .topbar {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 16px 22px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1080px;
+      margin: 0 auto 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .topbar h1 { font-size: 1.25rem; }
+    .topbar .user { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+    .topbar button {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+    }
+    .topbar button:hover { background: rgba(255,255,255,0.3); }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: white;
+      border: 1.5px solid #e0e0e0;
+      cursor: pointer;
+      font-size: 0.88rem;
+      color: #666;
+      font-weight: 600;
+    }
+    .chip.active { background: #667eea; color: white; border-color: #667eea; }
+    .visitor-list { display: flex; flex-direction: column; gap: 12px; }
+    .visitor-card {
+      background: white;
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+    }
+    .visitor-card .main { line-height: 1.6; }
+    .visitor-card .name { font-size: 1.1rem; font-weight: 700; color: #333; }
+    .visitor-card .sub { font-size: 0.88rem; color: #888; }
+    .visitor-card .meta { font-size: 0.85rem; color: #555; margin-top: 4px; }
+    .status {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .status-pending   { background: #fff3e0; color: #e65100; }
+    .status-approved  { background: #e8f5e9; color: #2e7d32; }
+    .status-checkedIn { background: #e3f2fd; color: #1565c0; }
+    .status-cancelled { background: #ffebee; color: #c62828; }
+    .actions { display: flex; flex-direction: column; gap: 6px; min-width: 110px; }
+    .actions button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: white;
+    }
+    .btn-approve { background: #2e7d32; }
+    .btn-reject  { background: #c62828; }
+    .btn-approve:hover, .btn-reject:hover { opacity: 0.9; }
+    .btn-link {
+      background: none !important;
+      color: #667eea !important;
+      padding: 4px !important;
+      font-size: 0.82rem !important;
+      text-decoration: underline;
+    }
+    .empty { text-align: center; padding: 60px 20px; color: #aaa; }
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      padding: 40px 30px;
+      max-width: 380px;
+      margin: 80px auto 0;
+      text-align: center;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+    }
+    .login-card h2 { margin-bottom: 12px; color: #333; }
+    .login-card p { color: #888; margin-bottom: 24px; font-size: 0.9rem; }
+    .google-btn {
+      width: 100%;
+      padding: 14px;
+      background: white;
+      border: 1.5px solid #ddd;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .google-btn:hover { background: #f9f9f9; }
+    .footer-link { text-align: center; margin-top: 18px; font-size: 0.85rem; }
+    .footer-link a { color: #667eea; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <div id="loginView" style="display:none;">
+    <div class="login-card">
+      <h2>🔐 員工登入</h2>
+      <p>核可訪客預約需要登入企業 Google 帳號</p>
+      <button class="google-btn" onclick="signIn()">
+        <span>🔵</span> 使用 Google 登入
+      </button>
+      <div class="footer-link"><a href="visitor-index.html">← 回首頁</a></div>
+    </div>
+  </div>
+
+  <div id="mainView" style="display:none;">
+    <div class="topbar">
+      <h1>📋 訪客預約核可</h1>
+      <div class="user">
+        <span id="userEmail"></span>
+        <button onclick="signOutClick()">登出</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="filter-bar">
+        <div class="chip active" data-filter="pending">⏳ 待核可</div>
+        <div class="chip" data-filter="approved">✅ 已核可</div>
+        <div class="chip" data-filter="checkedIn">🟢 已報到</div>
+        <div class="chip" data-filter="cancelled">⛔ 已取消</div>
+        <div class="chip" data-filter="all">全部</div>
+      </div>
+
+      <div id="visitorList" class="visitor-list"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7uHcuYxxo4YFyGj959grg8zlkT1wG4o8",
+      authDomain: "my-firebase-tools.firebaseapp.com",
+      projectId: "my-firebase-tools",
+      storageBucket: "my-firebase-tools.firebasestorage.app",
+      messagingSenderId: "757246006318",
+      appId: "1:757246006318:web:3d5dd95d646eeb38927bbf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentFilter = "pending";
+    let allVisitors = [];
+
+    const STATUS_LABEL = {
+      pending:    { text: "待核可", cls: "status-pending" },
+      approved:   { text: "已核可", cls: "status-approved" },
+      checkedIn:  { text: "已報到", cls: "status-checkedIn" },
+      checkedOut: { text: "已離場", cls: "status-checkedIn" },
+      cancelled:  { text: "已取消", cls: "status-cancelled" }
+    };
+
+    function fmt(ts) {
+      if (!ts || !ts.toDate) return "—";
+      const d = ts.toDate();
+      const pad = n => String(n).padStart(2, "0");
+      return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c =>
+        ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    }
+
+    function render() {
+      const list = document.getElementById("visitorList");
+      const filtered = currentFilter === "all"
+        ? allVisitors
+        : allVisitors.filter(v => v.status === currentFilter);
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="empty">目前沒有「${currentFilter === "all" ? "任何" : STATUS_LABEL[currentFilter]?.text || currentFilter}」的預約</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(v => {
+        const label = STATUS_LABEL[v.status] || STATUS_LABEL.pending;
+        const actions = v.status === "pending"
+          ? `<button class="btn-approve" onclick="approveBooking('${v.id}')">✓ 核可</button>
+             <button class="btn-reject"  onclick="rejectBooking('${v.id}')">✕ 退件</button>`
+          : `<button class="btn-link" onclick="viewQR('${v.qrToken}')">查看 QR</button>`;
+
+        return `
+          <div class="visitor-card">
+            <div class="main">
+              <div>
+                <span class="name">${escapeHtml(v.name)}</span>
+                <span class="status ${label.cls}">${label.text}</span>
+              </div>
+              <div class="sub">${escapeHtml(v.company || "個人")} · ${escapeHtml(v.phone || "")}</div>
+              <div class="meta">
+                🗓 ${fmt(v.visitAt)}
+                👤 受訪：${escapeHtml(v.hostName)}
+                ${v.plateNumber ? "　🚗 " + escapeHtml(v.plateNumber) : ""}
+              </div>
+              ${v.note ? `<div class="meta" style="color:#888; font-style:italic;">📝 ${escapeHtml(v.note)}</div>` : ""}
+            </div>
+            <div class="actions">${actions}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    document.querySelectorAll(".chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        currentFilter = chip.dataset.filter;
+        render();
+      });
+    });
+
+    window.approveBooking = async function(id) {
+      try {
+        await updateDoc(doc(db, "visitors", id), {
+          status: "approved",
+          approvedAt: serverTimestamp(),
+          approvedBy: auth.currentUser?.email || "unknown",
+          updatedAt: serverTimestamp()
+        });
+      } catch (e) { alert("核可失敗：" + e.message); }
+    };
+
+    window.rejectBooking = async function(id) {
+      if (!confirm("確定要退件嗎？")) return;
+      try {
+        await updateDoc(doc(db, "visitors", id), {
+          status: "cancelled",
+          approvedBy: auth.currentUser?.email || "unknown",
+          updatedAt: serverTimestamp()
+        });
+      } catch (e) { alert("退件失敗：" + e.message); }
+    };
+
+    window.viewQR = function(token) {
+      window.open(`visitor-confirm.html?token=${encodeURIComponent(token)}`, "_blank");
+    };
+
+    window.signIn = async function() {
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (e) { alert("登入失敗：" + e.message); }
+    };
+
+    window.signOutClick = async function() {
+      await signOut(auth);
+    };
+
+    let unsub = null;
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById("loginView").style.display = "none";
+        document.getElementById("mainView").style.display = "block";
+        document.getElementById("userEmail").textContent = user.email;
+
+        const q = query(collection(db, "visitors"), orderBy("visitAt", "desc"));
+        unsub = onSnapshot(q, snap => {
+          allVisitors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          render();
+        });
+      } else {
+        if (unsub) { unsub(); unsub = null; }
+        document.getElementById("loginView").style.display = "block";
+        document.getElementById("mainView").style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
