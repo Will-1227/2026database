@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>預約確認</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -193,22 +193,42 @@
         ${data.plateNumber ? `<div class="row"><span class="label">車牌</span><span class="value">${escapeHtml(data.plateNumber)}</span></div>` : ""}
       `;
 
-      // 產生 QR：編碼為「回到此確認頁的網址」
-      const qrUrl = `${location.origin}${location.pathname}?token=${encodeURIComponent(token)}`;
+      // 產生 QR：有完整 http/https origin 就編 URL，否則只編 token
+      const proto = location.protocol;
+      const qrContent = (proto === "http:" || proto === "https:")
+        ? `${location.origin}${location.pathname}?token=${encodeURIComponent(token)}`
+        : token;
       const qrEl = document.getElementById("qrcode");
       qrEl.innerHTML = "";
+      try {
+        const qr = qrcode(0, "M");
+        qr.addData(qrContent);
+        qr.make();
+        qrEl.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true });
 
-      QRCode.toCanvas(qrUrl, { width: 240, margin: 1 }, (err, canvas) => {
-        if (err) { console.error(err); return; }
-        qrEl.appendChild(canvas);
-        // 提供下載
-        QRCode.toDataURL(qrUrl, { width: 720, margin: 2 }, (e2, dataUrl) => {
-          if (e2) return;
-          const a = document.getElementById("downloadBtn");
-          a.href = dataUrl;
-          a.download = `visitor-qr-${data.name}.png`;
-        });
-      });
+        const moduleCount = qr.getModuleCount();
+        const cellSize = 16;
+        const margin = 4 * cellSize;
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = moduleCount * cellSize + margin * 2;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#000000";
+        for (let r = 0; r < moduleCount; r++) {
+          for (let c = 0; c < moduleCount; c++) {
+            if (qr.isDark(r, c)) {
+              ctx.fillRect(margin + c * cellSize, margin + r * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+        const a = document.getElementById("downloadBtn");
+        a.href = canvas.toDataURL("image/png");
+        a.download = `visitor-qr-${data.name}.png`;
+      } catch (err) {
+        console.error("QR encode failed:", err);
+        qrEl.innerHTML = `<div style="padding:30px; color:#888;">QR 產生失敗：${escapeHtml(err.message)}</div>`;
+      }
     }
 
     function escapeHtml(s) {

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>訪客預約登記</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -413,20 +413,38 @@
       const qrContent = shareUrl || qrToken;
       const qrEl = document.getElementById("qrcode");
       qrEl.innerHTML = "";
-      QRCode.toCanvas(qrContent, { width: 240, margin: 1 }, (err, canvas) => {
-        if (err) {
-          console.error("QR encode failed:", err);
-          qrEl.innerHTML = `<div style="padding:30px; color:#888;">QR 產生失敗：${escapeHtml(err.message)}</div>`;
-          return;
+      try {
+        const qr = qrcode(0, "M");
+        qr.addData(qrContent);
+        qr.make();
+
+        // 螢幕顯示：SVG（可放大不失真）
+        qrEl.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true });
+
+        // 下載 PNG：用 canvas 重畫
+        const moduleCount = qr.getModuleCount();
+        const cellSize = 16;
+        const margin = 4 * cellSize;
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = moduleCount * cellSize + margin * 2;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#000000";
+        for (let r = 0; r < moduleCount; r++) {
+          for (let c = 0; c < moduleCount; c++) {
+            if (qr.isDark(r, c)) {
+              ctx.fillRect(margin + c * cellSize, margin + r * cellSize, cellSize, cellSize);
+            }
+          }
         }
-        qrEl.appendChild(canvas);
-        QRCode.toDataURL(qrContent, { width: 720, margin: 2 }, (e2, dataUrl) => {
-          if (e2) return;
-          const a = document.getElementById("downloadBtn");
-          a.href = dataUrl;
-          a.download = `visitor-qr-${data.name}.png`;
-        });
-      });
+        const a = document.getElementById("downloadBtn");
+        a.href = canvas.toDataURL("image/png");
+        a.download = `visitor-qr-${data.name}.png`;
+      } catch (err) {
+        console.error("QR encode failed:", err);
+        qrEl.innerHTML = `<div style="padding:30px; color:#888;">QR 產生失敗：${escapeHtml(err.message)}</div>`;
+      }
     }
 
     // 只在正常 http/https 環境產生分享連結；沙箱（data: / blob: / file:）回 null
