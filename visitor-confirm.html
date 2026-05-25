@@ -204,7 +204,6 @@
         const qr = qrcode(0, "M");
         qr.addData(qrContent);
         qr.make();
-        qrEl.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true });
 
         const moduleCount = qr.getModuleCount();
         const cellSize = 16;
@@ -222,6 +221,11 @@
             }
           }
         }
+        canvas.style.width = "240px";
+        canvas.style.height = "240px";
+        canvas.style.display = "block";
+        qrEl.appendChild(canvas);
+
         const a = document.getElementById("downloadBtn");
         a.href = canvas.toDataURL("image/png");
         a.download = `visitor-qr-${data.name}.png`;
