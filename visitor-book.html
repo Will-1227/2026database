@@ -418,10 +418,7 @@
         qr.addData(qrContent);
         qr.make();
 
-        // 螢幕顯示：SVG（可放大不失真）
-        qrEl.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true });
-
-        // 下載 PNG：用 canvas 重畫
+        // 高解析 canvas（用於下載）；CSS 縮放顯示
         const moduleCount = qr.getModuleCount();
         const cellSize = 16;
         const margin = 4 * cellSize;
@@ -438,6 +435,12 @@
             }
           }
         }
+        // 螢幕顯示：CSS 縮放（保留高解析下載品質）
+        canvas.style.width = "240px";
+        canvas.style.height = "240px";
+        canvas.style.display = "block";
+        qrEl.appendChild(canvas);
+
         const a = document.getElementById("downloadBtn");
         a.href = canvas.toDataURL("image/png");
         a.download = `visitor-qr-${data.name}.png`;
