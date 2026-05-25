@@ -73,7 +73,10 @@
     }
     textarea { resize: vertical; min-height: 60px; }
     .row { display: flex; gap: 10px; }
-    .row > div { flex: 1; }
+    .row > div { flex: 1; min-width: 0; }
+    @media (max-width: 480px) {
+      .row { flex-direction: column; gap: 0; }
+    }
     button.primary {
       width: 100%;
       margin-top: 24px;
@@ -327,8 +330,8 @@
       <button type="button" class="photo-pick-btn" onclick="document.getElementById('vipPhotoFile').click()">
         📷 拍照 / 選擇相片
       </button>
-      <input type="file" id="vipPhotoFile" accept="image/*" capture="environment" style="display:none" onchange="onVipPhotoSelected(event)">
-      <div class="photo-tip">手機開啟可直接拍照；也支援從相簿選圖（自動壓縮）</div>
+      <input type="file" id="vipPhotoFile" accept="image/*" style="display:none" onchange="onVipPhotoSelected(event)">
+      <div class="photo-tip">手機開啟會跳「拍照 / 照片圖庫 / 選取檔案」原生選單（自動壓縮）</div>
       <div class="vip-photo-preview" id="vipPhotoPreview">尚未選擇照片</div>
       <div class="photo-meta" id="vipPhotoMeta"></div>
     </div>
