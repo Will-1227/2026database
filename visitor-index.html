@@ -43,6 +43,7 @@
     .tag-visitor { background: #fff3e0; color: #e65100; }
     .tag-staff   { background: #e8f5e9; color: #2e7d32; }
     .tag-guard   { background: #e8eaf6; color: #283593; }
+    .tag-admin   { background: #fce4ec; color: #ad1457; }
     .footer { color: rgba(255,255,255,0.5); font-size: 0.8rem; margin-top: 24px; }
   </style>
 </head>
@@ -58,6 +59,13 @@
       <span class="tag tag-visitor">🌐 公開頁面</span>
     </a>
 
+    <a class="card" href="staff-invite.html">
+      <div class="card-emoji">📨</div>
+      <div class="card-title">員工邀約</div>
+      <div class="card-desc">員工主動建立邀約，產生 QR 與分享連結</div>
+      <span class="tag tag-staff">🔐 需登入</span>
+    </a>
+
     <a class="card" href="staff-approve.html">
       <div class="card-emoji">📋</div>
       <div class="card-title">員工核可</div>
@@ -70,6 +78,13 @@
       <div class="card-title">保衛室控台</div>
       <div class="card-desc">今日訪客名單、掃 QR 自動報到</div>
       <span class="tag tag-guard">🔐 需登入</span>
+    </a>
+
+    <a class="card" href="admin-vip.html">
+      <div class="card-emoji">🌟</div>
+      <div class="card-title">VIP 名冊管理</div>
+      <div class="card-desc">維護重要訪客名單、Google Drive 大頭照</div>
+      <span class="tag tag-admin">🔐 需登入</span>
     </a>
 
     <p class="footer">Powered by Firebase + Claude Code</p>

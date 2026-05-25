@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIP 名冊管理</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: #f4f5f9;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .topbar {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 16px 22px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1080px;
+      margin: 0 auto 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .topbar h1 { font-size: 1.25rem; }
+    .topbar .user { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+    .topbar button {
+      background: rgba(255,255,255,0.2);
+      color: white; border: none;
+      padding: 8px 14px; border-radius: 8px;
+      cursor: pointer; font-size: 0.88rem;
+    }
+    .topbar button:hover { background: rgba(255,255,255,0.3); }
+
+    .container { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 380px 1fr; gap: 16px; }
+    @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .panel h2 {
+      font-size: 1.05rem;
+      color: #333;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: #555;
+      margin: 12px 0 5px;
+      font-weight: 600;
+    }
+    label .req { color: #e53935; }
+    label .hint { font-weight: 400; color: #aaa; font-size: 0.78rem; margin-left: 4px; }
+    input, textarea {
+      width: 100%;
+      font-size: 0.95rem;
+      padding: 10px 12px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      outline: none;
+      color: #333;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, textarea:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+    }
+    textarea { resize: vertical; min-height: 60px; }
+    .form-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .form-actions button {
+      flex: 1;
+      padding: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+    }
+    .btn-save { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .btn-cancel { background: #888; }
+    .btn-save:hover, .btn-cancel:hover { opacity: 0.92; }
+    .photo-preview {
+      margin-top: 8px;
+      width: 100%;
+      max-width: 160px;
+      aspect-ratio: 1;
+      border-radius: 10px;
+      background: #f5f5f7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #aaa;
+      font-size: 0.85rem;
+      overflow: hidden;
+    }
+    .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .error {
+      margin-top: 10px;
+      padding: 10px;
+      background: #ffebee;
+      border-radius: 8px;
+      color: #c62828;
+      font-size: 0.88rem;
+      display: none;
+    }
+
+    .vip-list { display: flex; flex-direction: column; gap: 10px; }
+    .vip-card {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      background: #fafbff;
+      border: 1px solid #eef;
+      border-radius: 12px;
+      transition: background 0.15s;
+    }
+    .vip-card:hover { background: #f3f5ff; }
+    .vip-card.inactive { opacity: 0.5; }
+    .vip-photo {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: #ddd;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .vip-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .vip-info { line-height: 1.5; min-width: 0; }
+    .vip-info .name { font-size: 1.05rem; font-weight: 700; color: #333; }
+    .vip-info .meta { font-size: 0.85rem; color: #777; }
+    .vip-info .sop { font-size: 0.82rem; color: #5a4a2a; background: #fff8e1; padding: 4px 8px; border-radius: 6px; margin-top: 6px; display: inline-block; }
+    .vip-actions { display: flex; flex-direction: column; gap: 6px; }
+    .vip-actions button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: white;
+    }
+    .btn-edit { background: #667eea; }
+    .btn-toggle { background: #888; }
+    .btn-delete { background: #c62828; }
+
+    .empty { text-align: center; padding: 40px; color: #aaa; }
+
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      padding: 40px 30px;
+      max-width: 380px;
+      margin: 80px auto 0;
+      text-align: center;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+    }
+    .login-card h2 { margin-bottom: 12px; color: #333; }
+    .login-card p { color: #888; margin-bottom: 24px; font-size: 0.9rem; }
+    .google-btn {
+      width: 100%;
+      padding: 14px;
+      background: white;
+      border: 1.5px solid #ddd;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #555;
+    }
+    .google-btn:hover { background: #f9f9f9; }
+    .footer-link { text-align: center; margin-top: 18px; font-size: 0.85rem; }
+    .footer-link a { color: #667eea; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <div id="loginView" style="display:none;">
+    <div class="login-card">
+      <h2>🔐 主管登入</h2>
+      <p>管理 VIP 名冊需要登入 Google 帳號</p>
+      <button class="google-btn" onclick="signIn()">使用 Google 登入</button>
+      <div class="footer-link"><a href="visitor-index.html">← 回首頁</a></div>
+    </div>
+  </div>
+
+  <div id="mainView" style="display:none;">
+    <div class="topbar">
+      <h1>🌟 VIP 名冊管理</h1>
+      <div class="user">
+        <span id="userEmail"></span>
+        <button onclick="signOutClick()">登出</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- 左：表單 -->
+      <div class="panel">
+        <h2 id="formTitle">＋ 新增 VIP</h2>
+
+        <label>姓名 <span class="req">*</span></label>
+        <input type="text" id="f_name" maxlength="40" placeholder="王董事長">
+
+        <label>公司</label>
+        <input type="text" id="f_company" maxlength="60" placeholder="ABC 集團">
+
+        <label>職稱</label>
+        <input type="text" id="f_title" maxlength="40" placeholder="董事長 / 執行長">
+
+        <label>電話 <span class="hint">用於預約自動比對</span></label>
+        <input type="tel" id="f_phone" maxlength="20" placeholder="0912345678">
+
+        <label>Email <span class="hint">用於預約自動比對</span></label>
+        <input type="email" id="f_email" maxlength="60" placeholder="vip@company.com">
+
+        <label>Google Drive 大頭照連結 <span class="hint">公開可檢視</span></label>
+        <input type="text" id="f_photo" placeholder="https://drive.google.com/file/d/.../view 或檔案 ID" oninput="updatePhotoPreview()">
+        <div class="photo-preview" id="photoPreview">尚未設定照片</div>
+
+        <label>對接窗口員工 Email</label>
+        <input type="email" id="f_owner" maxlength="60" placeholder="staff@company.com">
+
+        <label>接待 SOP 備註</label>
+        <textarea id="f_sop" maxlength="200" placeholder="例：請帶往 9F 貴賓室；總經理會親自接待"></textarea>
+
+        <div class="error" id="errorMsg"></div>
+
+        <div class="form-actions">
+          <button class="btn-save" id="saveBtn" onclick="saveVip()">儲存</button>
+          <button class="btn-cancel" onclick="resetForm()">取消</button>
+        </div>
+      </div>
+
+      <!-- 右：名單 -->
+      <div class="panel">
+        <h2>📋 名冊（<span id="vipCount">0</span> 位）</h2>
+        <div class="vip-list" id="vipList"></div>
+        <div class="footer-link" style="margin-top:20px;"><a href="visitor-index.html">← 回首頁</a></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7uHcuYxxo4YFyGj959grg8zlkT1wG4o8",
+      authDomain: "my-firebase-tools.firebaseapp.com",
+      projectId: "my-firebase-tools",
+      storageBucket: "my-firebase-tools.firebasestorage.app",
+      messagingSenderId: "757246006318",
+      appId: "1:757246006318:web:3d5dd95d646eeb38927bbf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let editingId = null;
+    let allVips = [];
+
+    // 從 Drive 連結擷取 file ID；接受純 ID 也能用
+    function extractDriveFileId(input) {
+      if (!input) return "";
+      const s = input.trim();
+      // 各種 Drive URL 格式
+      const m = s.match(/\/d\/([-\w]{20,})/) || s.match(/[?&]id=([-\w]{20,})/);
+      if (m) return m[1];
+      // 純檔案 ID：英數+底線+破折號，至少 20 字元
+      if (/^[-\w]{20,}$/.test(s)) return s;
+      return "";
+    }
+
+    function photoUrl(fileId) {
+      return fileId ? `https://lh3.googleusercontent.com/d/${fileId}=s400` : "";
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c =>
+        ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    }
+
+    window.updatePhotoPreview = function() {
+      const id = extractDriveFileId(document.getElementById("f_photo").value);
+      const el = document.getElementById("photoPreview");
+      if (id) {
+        el.innerHTML = `<img src="${photoUrl(id)}" alt="預覽" onerror="this.parentNode.innerHTML='⚠ 圖片無法載入<br><small>請確認 Drive 連結已設為「任何人皆可檢視」</small>'">`;
+      } else {
+        el.textContent = document.getElementById("f_photo").value ? "⚠ 無法解析連結" : "尚未設定照片";
+      }
+    };
+
+    function showError(msg) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+
+    window.resetForm = function() {
+      editingId = null;
+      document.getElementById("formTitle").textContent = "＋ 新增 VIP";
+      ["f_name","f_company","f_title","f_phone","f_email","f_photo","f_owner","f_sop"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      document.getElementById("photoPreview").textContent = "尚未設定照片";
+      document.getElementById("errorMsg").style.display = "none";
+      document.getElementById("saveBtn").textContent = "儲存";
+    };
+
+    window.saveVip = async function() {
+      document.getElementById("errorMsg").style.display = "none";
+      const name = document.getElementById("f_name").value.trim();
+      if (!name) return showError("請填寫姓名");
+
+      const photoInput = document.getElementById("f_photo").value.trim();
+      const photoFileId = extractDriveFileId(photoInput);
+      if (photoInput && !photoFileId) return showError("Drive 連結無法解析，請確認格式");
+
+      const data = {
+        name,
+        company: document.getElementById("f_company").value.trim(),
+        title: document.getElementById("f_title").value.trim(),
+        phone: document.getElementById("f_phone").value.trim(),
+        email: document.getElementById("f_email").value.trim().toLowerCase(),
+        photoFileId,
+        ownerEmail: document.getElementById("f_owner").value.trim().toLowerCase(),
+        greetingSOP: document.getElementById("f_sop").value.trim(),
+        active: true,
+        updatedAt: serverTimestamp(),
+        updatedBy: auth.currentUser?.email || ""
+      };
+
+      const btn = document.getElementById("saveBtn");
+      btn.disabled = true;
+      btn.textContent = "儲存中…";
+
+      try {
+        if (editingId) {
+          await updateDoc(doc(db, "vips", editingId), data);
+        } else {
+          await addDoc(collection(db, "vips"), {
+            ...data,
+            createdAt: serverTimestamp(),
+            createdBy: auth.currentUser?.email || ""
+          });
+        }
+        resetForm();
+      } catch (e) {
+        showError("儲存失敗：" + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "儲存";
+      }
+    };
+
+    window.editVip = function(id) {
+      const v = allVips.find(x => x.id === id);
+      if (!v) return;
+      editingId = id;
+      document.getElementById("formTitle").textContent = "✏ 編輯 VIP";
+      document.getElementById("f_name").value = v.name || "";
+      document.getElementById("f_company").value = v.company || "";
+      document.getElementById("f_title").value = v.title || "";
+      document.getElementById("f_phone").value = v.phone || "";
+      document.getElementById("f_email").value = v.email || "";
+      document.getElementById("f_photo").value = v.photoFileId || "";
+      document.getElementById("f_owner").value = v.ownerEmail || "";
+      document.getElementById("f_sop").value = v.greetingSOP || "";
+      window.updatePhotoPreview();
+      document.getElementById("saveBtn").textContent = "儲存變更";
+      window.scrollTo(0, 0);
+    };
+
+    window.toggleActive = async function(id) {
+      const v = allVips.find(x => x.id === id);
+      if (!v) return;
+      try {
+        await updateDoc(doc(db, "vips", id), { active: !v.active, updatedAt: serverTimestamp() });
+      } catch (e) { alert("操作失敗：" + e.message); }
+    };
+
+    window.deleteVip = async function(id) {
+      const v = allVips.find(x => x.id === id);
+      if (!v) return;
+      if (!confirm(`確定刪除「${v.name}」？此動作無法復原。`)) return;
+      try {
+        await deleteDoc(doc(db, "vips", id));
+      } catch (e) { alert("刪除失敗：" + e.message); }
+    };
+
+    function renderList() {
+      const el = document.getElementById("vipList");
+      document.getElementById("vipCount").textContent = allVips.length;
+      if (allVips.length === 0) {
+        el.innerHTML = `<div class="empty">尚無 VIP 資料，請從左側新增</div>`;
+        return;
+      }
+      el.innerHTML = allVips.map(v => `
+        <div class="vip-card ${v.active === false ? "inactive" : ""}">
+          <div class="vip-photo">
+            ${v.photoFileId
+              ? `<img src="${photoUrl(v.photoFileId)}" alt="${escapeHtml(v.name)}" onerror="this.style.display='none'">`
+              : ""}
+          </div>
+          <div class="vip-info">
+            <div class="name">${escapeHtml(v.name)}${v.active === false ? "（停用）" : ""}</div>
+            <div class="meta">${escapeHtml(v.title || "")} ${escapeHtml(v.company || "")}</div>
+            <div class="meta">${escapeHtml(v.phone || "")} ${v.email ? "· " + escapeHtml(v.email) : ""}</div>
+            ${v.greetingSOP ? `<div class="sop">💡 ${escapeHtml(v.greetingSOP)}</div>` : ""}
+          </div>
+          <div class="vip-actions">
+            <button class="btn-edit" onclick="editVip('${v.id}')">編輯</button>
+            <button class="btn-toggle" onclick="toggleActive('${v.id}')">${v.active === false ? "啟用" : "停用"}</button>
+            <button class="btn-delete" onclick="deleteVip('${v.id}')">刪除</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    window.signIn = async function() {
+      try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+      catch (e) { alert("登入失敗：" + e.message); }
+    };
+    window.signOutClick = async function() { await signOut(auth); };
+
+    let unsub = null;
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById("loginView").style.display = "none";
+        document.getElementById("mainView").style.display = "block";
+        document.getElementById("userEmail").textContent = user.email;
+
+        const q = query(collection(db, "vips"), orderBy("name"));
+        unsub = onSnapshot(q, snap => {
+          allVips = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderList();
+        }, err => {
+          document.getElementById("vipList").innerHTML =
+            `<div class="empty">讀取失敗：${escapeHtml(err.message)}</div>`;
+        });
+      } else {
+        if (unsub) { unsub(); unsub = null; }
+        document.getElementById("loginView").style.display = "block";
+        document.getElementById("mainView").style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>

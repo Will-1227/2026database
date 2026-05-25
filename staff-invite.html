@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>員工邀約訪客</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 36px 28px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    }
+    .header { text-align: center; margin-bottom: 18px; }
+    .emoji { font-size: 2.6rem; margin-bottom: 8px; }
+    h1 { font-size: 1.55rem; color: #333; margin-bottom: 6px; }
+    .subtitle { color: #888; font-size: 0.92rem; }
+    .topbar-mini {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: #f5f5f7;
+      border-radius: 10px;
+      margin-bottom: 18px;
+      font-size: 0.88rem;
+      color: #555;
+    }
+    .topbar-mini button {
+      background: none;
+      border: none;
+      color: #667eea;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    label {
+      display: block;
+      font-size: 0.88rem;
+      color: #555;
+      margin: 14px 0 6px;
+      font-weight: 600;
+    }
+    label .req { color: #e53935; }
+    label .hint { font-weight: 400; color: #aaa; font-size: 0.78rem; margin-left: 4px; }
+    input, textarea {
+      width: 100%;
+      font-size: 1rem;
+      padding: 12px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      color: #333;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+    }
+    textarea { resize: vertical; min-height: 60px; }
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+    button.primary {
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px;
+      font-size: 1.05rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    button.primary:hover { opacity: 0.92; transform: translateY(-1px); }
+    button.primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .error {
+      margin-top: 12px;
+      padding: 12px;
+      background: #ffebee;
+      border-radius: 10px;
+      color: #c62828;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .footer-link { text-align: center; margin-top: 18px; font-size: 0.85rem; }
+    .footer-link a { color: #667eea; text-decoration: none; }
+
+    /* 邀約成功確認區 */
+    .confirm-header { text-align: center; margin-bottom: 18px; }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: #e8f5e9;
+      color: #2e7d32;
+      margin-top: 4px;
+    }
+    .qr-wrap {
+      background: #fafafa;
+      border-radius: 16px;
+      padding: 22px;
+      text-align: center;
+      margin: 16px 0;
+    }
+    #qrcode { display: inline-block; padding: 8px; background: white; border-radius: 8px; }
+    .info-block {
+      background: #f5f5f7;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: #444;
+    }
+    .info-block .info-row { display: flex; gap: 8px; }
+    .info-block .label { color: #888; min-width: 64px; }
+    .info-block .value { font-weight: 600; color: #333; flex: 1; }
+    .actions { display: flex; gap: 10px; margin-top: 16px; }
+    .btn {
+      flex: 1;
+      padding: 14px;
+      font-size: 0.98rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      color: white;
+    }
+    .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .btn-secondary { background: #555; }
+    .share-link {
+      margin-top: 14px;
+      padding: 12px;
+      background: #eef1ff;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: #444;
+      word-break: break-all;
+      line-height: 1.55;
+    }
+    .share-link button {
+      margin-top: 6px;
+      padding: 6px 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      width: auto;
+    }
+    .hint {
+      margin-top: 14px;
+      padding: 12px;
+      background: #fff8e1;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      color: #795548;
+      line-height: 1.55;
+    }
+
+    /* 登入畫面 */
+    .login-card { text-align: center; }
+    .google-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 14px;
+      background: white;
+      border: 1.5px solid #ddd;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #555;
+    }
+    .google-btn:hover { background: #f9f9f9; }
+  </style>
+</head>
+<body>
+
+  <div id="loginView" class="card" style="display:none;">
+    <div class="login-card">
+      <div class="emoji">📨</div>
+      <h1>員工邀約訪客</h1>
+      <p class="subtitle">登入企業 Google 帳號後即可主動建立預約</p>
+      <button class="google-btn" onclick="signIn()">使用 Google 登入</button>
+      <div class="footer-link"><a href="visitor-index.html">← 回首頁</a></div>
+    </div>
+  </div>
+
+  <!-- 表單 -->
+  <div id="formCard" class="card" style="display:none;">
+    <div class="topbar-mini">
+      <span>👤 <span id="userEmail"></span></span>
+      <button onclick="signOutClick()">登出</button>
+    </div>
+
+    <div class="header">
+      <div class="emoji">📨</div>
+      <h1>邀約訪客</h1>
+      <p class="subtitle">直接核可，免再經員工核可流程</p>
+    </div>
+
+    <label>訪客姓名 <span class="req">*</span></label>
+    <input type="text" id="name" placeholder="王董事長" maxlength="40">
+
+    <div class="row">
+      <div>
+        <label>電話</label>
+        <input type="tel" id="phone" placeholder="0912345678" maxlength="20">
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" id="email" placeholder="optional" maxlength="60">
+      </div>
+    </div>
+
+    <label>公司 / 單位</label>
+    <input type="text" id="company" placeholder="ABC 股份有限公司" maxlength="60">
+
+    <div class="row">
+      <div>
+        <label>預計到訪 <span class="req">*</span></label>
+        <input type="datetime-local" id="visitAt">
+      </div>
+      <div>
+        <label>車牌（如有）</label>
+        <input type="text" id="plateNumber" placeholder="ABC-1234" maxlength="15">
+      </div>
+    </div>
+
+    <label>受訪員工 <span class="hint">預設為您</span></label>
+    <input type="text" id="hostName" maxlength="40">
+
+    <label>備註</label>
+    <textarea id="note" placeholder="會議主題、地點等" maxlength="200"></textarea>
+
+    <div class="error" id="errorMsg"></div>
+
+    <button class="primary" id="submitBtn" onclick="submitInvite()">建立邀約並取得 QR →</button>
+
+    <div class="footer-link"><a href="visitor-index.html">← 回首頁</a></div>
+  </div>
+
+  <!-- 成功確認 -->
+  <div id="confirmCard" class="card" style="display:none;">
+    <div class="topbar-mini">
+      <span>👤 <span id="userEmail2"></span></span>
+      <button onclick="signOutClick()">登出</button>
+    </div>
+
+    <div class="confirm-header">
+      <div class="emoji">✅</div>
+      <h1>邀約已建立</h1>
+      <div class="status-badge">已核可（自動）</div>
+    </div>
+
+    <div class="qr-wrap">
+      <div id="qrcode"></div>
+      <p style="margin-top:12px; color:#888; font-size:0.85rem;">將此 QR 或下方連結傳給訪客</p>
+    </div>
+
+    <div class="info-block" id="infoBlock"></div>
+
+    <div class="actions">
+      <a id="downloadBtn" class="btn btn-primary" download="visitor-qr.png">⬇ 下載 QR</a>
+      <button class="btn btn-secondary" onclick="copyLink()">📎 複製連結</button>
+    </div>
+
+    <div class="share-link" id="shareLinkBox">
+      <strong>可分享連結：</strong><br>
+      <span id="shareLink"></span>
+    </div>
+
+    <div class="hint">
+      💡 把 QR 圖片或連結貼到 LINE / Slack / Email 給訪客即可。<br>
+      訪客到訪當日由保衛室掃描 QR 完成報到。
+    </div>
+
+    <div class="footer-link">
+      <a href="#" onclick="startNew(); return false;">+ 再邀約一位</a>　·　<a href="visitor-index.html">回首頁</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, Timestamp }
+      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7uHcuYxxo4YFyGj959grg8zlkT1wG4o8",
+      authDomain: "my-firebase-tools.firebaseapp.com",
+      projectId: "my-firebase-tools",
+      storageBucket: "my-firebase-tools.firebasestorage.app",
+      messagingSenderId: "757246006318",
+      appId: "1:757246006318:web:3d5dd95d646eeb38927bbf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c =>
+        ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+
+    function setDefaultTime() {
+      const d = new Date(Date.now() + 60 * 60 * 1000);
+      d.setMinutes(0, 0, 0);
+      const pad = n => String(n).padStart(2, "0");
+      document.getElementById("visitAt").value =
+        `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    let bookingState = null;
+
+    window.startNew = function() {
+      ["name","phone","email","company","plateNumber","note"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      document.getElementById("errorMsg").style.display = "none";
+      setDefaultTime();
+      document.getElementById("confirmCard").style.display = "none";
+      document.getElementById("formCard").style.display = "block";
+      window.scrollTo(0, 0);
+    };
+
+    window.submitInvite = async function() {
+      document.getElementById("errorMsg").style.display = "none";
+      const name = document.getElementById("name").value.trim();
+      const hostName = document.getElementById("hostName").value.trim();
+      const visitAtStr = document.getElementById("visitAt").value;
+
+      if (!name) return showError("請填寫訪客姓名");
+      if (!hostName) return showError("請填寫受訪員工");
+      if (!visitAtStr) return showError("請選擇預計到訪時間");
+
+      const visitAt = new Date(visitAtStr);
+      if (isNaN(visitAt.getTime())) return showError("時間格式錯誤");
+
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.textContent = "建立中…";
+
+      try {
+        const qrToken = (crypto.randomUUID ? crypto.randomUUID()
+                         : Math.random().toString(36).slice(2) + Date.now().toString(36));
+        const data = {
+          name,
+          phone: document.getElementById("phone").value.trim(),
+          email: document.getElementById("email").value.trim().toLowerCase(),
+          company: document.getElementById("company").value.trim(),
+          hostName,
+          hostEmail: auth.currentUser?.email || "",
+          visitAt: Timestamp.fromDate(visitAt),
+          plateNumber: document.getElementById("plateNumber").value.trim(),
+          note: document.getElementById("note").value.trim(),
+          status: "approved",
+          source: "staff-invited",
+          qrToken,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          approvedAt: serverTimestamp(),
+          approvedBy: auth.currentUser?.email || "",
+          checkedInAt: null,
+          checkedOutAt: null
+        };
+        await addDoc(collection(db, "visitors"), data);
+        showConfirmation(qrToken, data, visitAt);
+      } catch (e) {
+        showError("建立失敗：" + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "建立邀約並取得 QR →";
+      }
+    };
+
+    function buildShareUrl(qrToken) {
+      const proto = location.protocol;
+      if (proto !== "http:" && proto !== "https:") return null;
+      const base = location.href.split("?")[0].replace(/staff-invite\.html$/, "");
+      return `${base}visitor-confirm.html?token=${encodeURIComponent(qrToken)}`;
+    }
+
+    function showConfirmation(qrToken, data, visitAt) {
+      bookingState = { qrToken, data, visitAt };
+
+      document.getElementById("formCard").style.display = "none";
+      document.getElementById("confirmCard").style.display = "block";
+      window.scrollTo(0, 0);
+
+      const shareUrl = buildShareUrl(qrToken);
+      const shareLinkBox = document.getElementById("shareLinkBox");
+      if (shareUrl) {
+        document.getElementById("shareLink").textContent = shareUrl;
+        shareLinkBox.style.display = "block";
+      } else {
+        shareLinkBox.style.display = "none";
+      }
+
+      const fmt = d => {
+        const pad = n => String(n).padStart(2, "0");
+        return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      };
+      document.getElementById("infoBlock").innerHTML = `
+        <div class="info-row"><span class="label">訪客</span><span class="value">${escapeHtml(data.name)}</span></div>
+        <div class="info-row"><span class="label">公司</span><span class="value">${escapeHtml(data.company || "—")}</span></div>
+        <div class="info-row"><span class="label">受訪</span><span class="value">${escapeHtml(data.hostName)}</span></div>
+        <div class="info-row"><span class="label">時間</span><span class="value">${fmt(visitAt)}</span></div>
+        ${data.plateNumber ? `<div class="info-row"><span class="label">車牌</span><span class="value">${escapeHtml(data.plateNumber)}</span></div>` : ""}
+      `;
+
+      const qrContent = shareUrl || qrToken;
+      const qrEl = document.getElementById("qrcode");
+      qrEl.innerHTML = "";
+      try {
+        const qr = qrcode(0, "M");
+        qr.addData(qrContent);
+        qr.make();
+        const moduleCount = qr.getModuleCount();
+        const cellSize = 16;
+        const margin = 4 * cellSize;
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = moduleCount * cellSize + margin * 2;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#000000";
+        for (let r = 0; r < moduleCount; r++) {
+          for (let c = 0; c < moduleCount; c++) {
+            if (qr.isDark(r, c)) ctx.fillRect(margin + c * cellSize, margin + r * cellSize, cellSize, cellSize);
+          }
+        }
+        canvas.style.width = "240px";
+        canvas.style.height = "240px";
+        canvas.style.display = "block";
+        qrEl.appendChild(canvas);
+        const a = document.getElementById("downloadBtn");
+        a.href = canvas.toDataURL("image/png");
+        a.download = `invite-${data.name}.png`;
+      } catch (err) {
+        qrEl.innerHTML = `<div style="padding:30px; color:#888;">QR 產生失敗：${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    window.copyLink = async function() {
+      const text = document.getElementById("shareLink").textContent;
+      if (!text) { alert("此環境無分享連結"); return; }
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("連結已複製");
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); alert("連結已複製"); } catch { alert("請手動複製"); }
+        ta.remove();
+      }
+    };
+
+    window.signIn = async function() {
+      try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+      catch (e) { alert("登入失敗：" + e.message); }
+    };
+    window.signOutClick = async function() { await signOut(auth); };
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById("loginView").style.display = "none";
+        document.getElementById("formCard").style.display = "block";
+        document.getElementById("userEmail").textContent = user.email;
+        document.getElementById("userEmail2").textContent = user.email;
+        // 預設受訪員工 = 自己（displayName 或 email 前綴）
+        const hostInput = document.getElementById("hostName");
+        if (!hostInput.value) {
+          hostInput.value = user.displayName || (user.email || "").split("@")[0];
+        }
+        setDefaultTime();
+      } else {
+        document.getElementById("loginView").style.display = "block";
+        document.getElementById("formCard").style.display = "none";
+        document.getElementById("confirmCard").style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
