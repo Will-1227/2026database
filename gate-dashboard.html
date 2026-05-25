@@ -291,9 +291,8 @@
                 <span class="status ${label.cls}">${label.text}</span>
               </div>
               <div class="meta">
-                🕐 ${fmtTime(v.visitAt)}
-                · ${escapeHtml(v.company || "個人")}
-                · 受訪：${escapeHtml(v.hostName)}
+                🕐 預約 ${fmtTime(v.visitAt)}${v.checkedInAt ? ` · ✅ 實到 ${fmtTime(v.checkedInAt)}` : ""}${v.checkedOutAt ? ` · 🚪 離場 ${fmtTime(v.checkedOutAt)}` : ""}
+                <br>${escapeHtml(v.company || "個人")} · 受訪：${escapeHtml(v.hostName)}
                 ${v.plateNumber ? "<br>🚗 " + escapeHtml(v.plateNumber) : ""}
               </div>
             </div>
