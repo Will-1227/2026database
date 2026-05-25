@@ -339,12 +339,24 @@
     let todayVisitors = [];
     let activeVips = [];
 
-    // VIP 比對：只比對訪客姓名與 VIP 名冊姓名（trim + 不分大小寫）
+    // VIP 比對：
+    //  1) 訪客自身 isVip=true（員工邀約時勾選）→ 用訪客自己的資料當 VIP
+    //  2) 否則比對 VIP 名冊姓名（trim + 不分大小寫）
     function normName(n) {
       return String(n || "").trim().toLowerCase();
     }
     function matchVip(visitor) {
       if (!visitor) return null;
+      if (visitor.isVip === true) {
+        return {
+          name: visitor.name,
+          title: "",
+          company: visitor.company || "",
+          photoFileId: visitor.vipPhotoFileId || "",
+          greetingSOP: visitor.note || "",
+          ownerEmail: visitor.hostEmail || ""
+        };
+      }
       const target = normName(visitor.name);
       if (!target) return null;
       for (const vip of activeVips) {
