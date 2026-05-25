@@ -165,6 +165,96 @@
     /* html5-qrcode 內部樣式覆寫 */
     #scanner button { background: #667eea !important; color: white !important; border-radius: 8px !important; }
     #scanner select { color: #333 !important; }
+
+    /* VIP 警示區 */
+    .vip-panel {
+      background: linear-gradient(135deg, #4a3a1d, #6b4a1e);
+      border: 2px solid #ffc107;
+      box-shadow: 0 4px 24px rgba(255, 193, 7, 0.25);
+      margin-bottom: 16px;
+    }
+    .vip-panel h2 { color: #ffd54f; }
+    .vip-card {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 12px;
+      background: rgba(0,0,0,0.18);
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .vip-card:last-child { margin-bottom: 0; }
+    .vip-photo {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: #34374e;
+      overflow: hidden;
+      border: 2px solid #ffc107;
+      flex-shrink: 0;
+    }
+    .vip-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .vip-info { line-height: 1.5; min-width: 0; }
+    .vip-info .vip-name { font-size: 1.05rem; font-weight: 700; color: #fff; }
+    .vip-info .vip-name .star { color: #ffd54f; margin-right: 4px; }
+    .vip-info .vip-meta { font-size: 0.85rem; color: #ddc; }
+    .vip-info .vip-sop {
+      font-size: 0.82rem;
+      color: #fff8e1;
+      background: rgba(255, 193, 7, 0.2);
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-top: 4px;
+      display: inline-block;
+    }
+    .vip-info .vip-status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    /* 訪客列：VIP 命中 */
+    .visitor-row.is-vip {
+      border-left: 4px solid #ffc107;
+      padding-left: 10px;
+      background: rgba(255, 193, 7, 0.06);
+      border-radius: 6px;
+      margin: 4px 0;
+    }
+    .visitor-row .vip-tag {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd54f, #ffa726);
+      color: #4a2c00;
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
+    /* 掃描結果：VIP 標識 */
+    .scan-result.vip-hit {
+      background: linear-gradient(135deg, #4a3a1d, #6b4a1e);
+      color: #fff;
+      border: 2px solid #ffc107;
+    }
+    .scan-result .vip-banner {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffd54f;
+      margin-bottom: 6px;
+    }
+    .scan-result .vip-sop-inline {
+      background: rgba(255, 193, 7, 0.2);
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: #fff8e1;
+    }
   </style>
 </head>
 <body>
@@ -186,6 +276,12 @@
         <span id="userEmail"></span>
         <button onclick="signOutClick()">登出</button>
       </div>
+    </div>
+
+    <!-- 今日 VIP 警示區（沒命中時隱藏） -->
+    <div id="vipPanel" class="panel vip-panel" style="display:none;">
+      <h2>🌟 今日 VIP（<span id="vipCount">0</span> 位）</h2>
+      <div id="vipList"></div>
     </div>
 
     <div class="layout">
@@ -241,6 +337,27 @@
     };
 
     let todayVisitors = [];
+    let activeVips = [];
+
+    // VIP 比對：phone / email / name+company
+    function normPhone(p) {
+      return String(p || "").replace(/[\s\-()+]/g, "");
+    }
+    function matchVip(visitor) {
+      if (!visitor) return null;
+      for (const vip of activeVips) {
+        if (vip.active === false) continue;
+        if (vip.phone && visitor.phone && normPhone(vip.phone) === normPhone(visitor.phone)) return vip;
+        if (vip.email && visitor.email
+            && vip.email.toLowerCase() === String(visitor.email).toLowerCase()) return vip;
+        if (vip.name && visitor.name && vip.company && visitor.company
+            && vip.name === visitor.name && vip.company === visitor.company) return vip;
+      }
+      return null;
+    }
+    function vipPhotoUrl(fileId) {
+      return fileId ? `https://lh3.googleusercontent.com/d/${fileId}=s200` : "";
+    }
 
     function pad(n) { return String(n).padStart(2, "0"); }
     function fmtTime(ts) {
@@ -266,17 +383,56 @@
       const el = document.getElementById("visitorList");
       document.getElementById("todayCount").textContent = todayVisitors.length;
 
-      if (todayVisitors.length === 0) {
+      // 預先計算每位訪客的 VIP 比對結果
+      const enriched = todayVisitors.map(v => ({ ...v, _vip: matchVip(v) }));
+
+      // ── 上方 VIP 警示區 ──
+      const vipHits = enriched.filter(v => v._vip && v.status !== "cancelled");
+      const vipPanel = document.getElementById("vipPanel");
+      const vipList = document.getElementById("vipList");
+      document.getElementById("vipCount").textContent = vipHits.length;
+      if (vipHits.length === 0) {
+        vipPanel.style.display = "none";
+      } else {
+        vipPanel.style.display = "block";
+        vipList.innerHTML = vipHits.map(v => {
+          const vip = v._vip;
+          const label = STATUS_LABEL[v.status] || STATUS_LABEL.pending;
+          return `
+            <div class="vip-card">
+              <div class="vip-photo">
+                ${vip.photoFileId ? `<img src="${vipPhotoUrl(vip.photoFileId)}" alt="" onerror="this.style.display='none'">` : ""}
+              </div>
+              <div class="vip-info">
+                <div class="vip-name">
+                  <span class="star">⭐</span>${escapeHtml(vip.name)}
+                  <span class="vip-status status ${label.cls}">${label.text}</span>
+                </div>
+                <div class="vip-meta">
+                  ${escapeHtml(vip.title || "")} ${escapeHtml(vip.company || "")}　·　🕐 預約 ${fmtTime(v.visitAt)}${v.checkedInAt ? " · ✅ 實到 " + fmtTime(v.checkedInAt) : ""}
+                </div>
+                <div class="vip-meta">受訪：${escapeHtml(v.hostName)}${vip.ownerEmail ? "（窗口 " + escapeHtml(vip.ownerEmail) + "）" : ""}</div>
+                ${vip.greetingSOP ? `<div class="vip-sop">💡 ${escapeHtml(vip.greetingSOP)}</div>` : ""}
+              </div>
+              <div></div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // ── 下方今日清單 ──
+      if (enriched.length === 0) {
         el.innerHTML = `<div class="empty">今日尚無預約紀錄</div>`;
         return;
       }
 
       // 排序：報到中 → 已核可 → 待核可 → 已離場/取消
       const order = { checkedIn: 0, approved: 1, pending: 2, checkedOut: 3, cancelled: 4 };
-      const sorted = [...todayVisitors].sort((a,b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
+      const sorted = [...enriched].sort((a,b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
 
       el.innerHTML = sorted.map(v => {
         const label = STATUS_LABEL[v.status] || STATUS_LABEL.pending;
+        const isVip = !!v._vip;
         let actionBtn = "";
         if (v.status === "approved") {
           actionBtn = `<button class="btn-checkin" onclick="checkIn('${v.id}')">✓ 報到</button>`;
@@ -284,10 +440,11 @@
           actionBtn = `<button class="btn-checkout" onclick="checkOut('${v.id}')">離場</button>`;
         }
         return `
-          <div class="visitor-row">
+          <div class="visitor-row${isVip ? " is-vip" : ""}">
             <div>
               <div>
                 <span class="name">${escapeHtml(v.name)}</span>
+                ${isVip ? `<span class="vip-tag">⭐ VIP</span>` : ""}
                 <span class="status ${label.cls}">${label.text}</span>
               </div>
               <div class="meta">
@@ -373,11 +530,23 @@
       } else if (match.status === "cancelled") {
         action = "<br>⛔ 此預約已取消";
       }
+      const vip = matchVip(match);
+      const vipBanner = vip
+        ? `<div class="vip-banner">⭐ VIP 訪客 — ${escapeHtml(vip.title || "")} ${escapeHtml(vip.name)}</div>`
+        : "";
+      const vipSop = vip && vip.greetingSOP
+        ? `<div class="vip-sop-inline">💡 ${escapeHtml(vip.greetingSOP)}</div>`
+        : "";
+      const resultType = vip
+        ? "vip-hit"
+        : (match.status === "approved" || match.status === "checkedIn" ? "success" : "error");
       showScanResult(`
+        ${vipBanner}
         <strong>${escapeHtml(match.name)}</strong> ・ ${label}<br>
         ${escapeHtml(match.company || "")} → ${escapeHtml(match.hostName)}
         ${action}
-      `, match.status === "approved" || match.status === "checkedIn" ? "success" : "error");
+        ${vipSop}
+      `, resultType);
     }
 
     window.startScanner = async function() {
@@ -422,8 +591,10 @@
       await signOut(auth);
     };
 
-    // ---- 監聽今日訪客 ----
-    let unsub = null;
+    // ---- 監聽今日訪客 + VIP 名冊 ----
+    let unsubVisitors = null;
+    let unsubVips = null;
+
     function subscribeToday() {
       const now = new Date();
       const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
@@ -435,7 +606,7 @@
         where("visitAt", "<=", Timestamp.fromDate(end)),
         orderBy("visitAt", "asc")
       );
-      unsub = onSnapshot(q, snap => {
+      unsubVisitors = onSnapshot(q, snap => {
         todayVisitors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         renderList();
       }, err => {
@@ -445,14 +616,26 @@
       });
     }
 
+    function subscribeVips() {
+      // 不在 query 加 active 過濾，client side 處理（避免 index 需求）
+      unsubVips = onSnapshot(collection(db, "vips"), snap => {
+        activeVips = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderList();  // VIP 變動時重 render
+      }, err => console.error("vips read failed:", err));
+    }
+
     onAuthStateChanged(auth, user => {
       if (user) {
         document.getElementById("loginView").style.display = "none";
         document.getElementById("mainView").style.display = "block";
         document.getElementById("userEmail").textContent = user.email;
         subscribeToday();
+        subscribeVips();
       } else {
-        if (unsub) { unsub(); unsub = null; }
+        if (unsubVisitors) { unsubVisitors(); unsubVisitors = null; }
+        if (unsubVips) { unsubVips(); unsubVips = null; }
+        activeVips = [];
+        todayVisitors = [];
         document.getElementById("loginView").style.display = "block";
         document.getElementById("mainView").style.display = "none";
       }
