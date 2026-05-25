@@ -339,19 +339,17 @@
     let todayVisitors = [];
     let activeVips = [];
 
-    // VIP 比對：phone / email / name+company
-    function normPhone(p) {
-      return String(p || "").replace(/[\s\-()+]/g, "");
+    // VIP 比對：只比對訪客姓名與 VIP 名冊姓名（trim + 不分大小寫）
+    function normName(n) {
+      return String(n || "").trim().toLowerCase();
     }
     function matchVip(visitor) {
       if (!visitor) return null;
+      const target = normName(visitor.name);
+      if (!target) return null;
       for (const vip of activeVips) {
         if (vip.active === false) continue;
-        if (vip.phone && visitor.phone && normPhone(vip.phone) === normPhone(visitor.phone)) return vip;
-        if (vip.email && visitor.email
-            && vip.email.toLowerCase() === String(visitor.email).toLowerCase()) return vip;
-        if (vip.name && visitor.name && vip.company && visitor.company
-            && vip.name === visitor.name && vip.company === visitor.company) return vip;
+        if (vip.name && normName(vip.name) === target) return vip;
       }
       return null;
     }
