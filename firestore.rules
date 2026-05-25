@@ -8,15 +8,18 @@ service cloud.firestore {
     }
 
     // 訪客預約
-    //  create: 任何人可建立（必須帶 pending 狀態與 qrToken、姓名、受訪者）
+    //  create: 匿名只能建立 pending；登入使用者（員工邀約）可直接建 approved
     //  read:   任何人可讀（訪客憑 token 查自己、保衛室列出今日清單）
     //  update: 僅登入使用者可更新（核可、報到、退件）
     //  delete: 禁止（保留稽核紀錄）
     match /visitors/{visitorId} {
-      allow create: if request.resource.data.status == 'pending'
-                    && request.resource.data.qrToken is string
+      allow create: if request.resource.data.qrToken is string
                     && request.resource.data.name is string
-                    && request.resource.data.hostName is string;
+                    && request.resource.data.hostName is string
+                    && (
+                      request.resource.data.status == 'pending'
+                      || request.auth != null
+                    );
       allow read: if true;
       allow update: if request.auth != null;
       allow delete: if false;
