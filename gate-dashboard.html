@@ -353,6 +353,7 @@
           title: "",
           company: visitor.company || "",
           photoFileId: visitor.vipPhotoFileId || "",
+          photoData: visitor.vipPhotoData || "",
           greetingSOP: visitor.note || "",
           ownerEmail: visitor.hostEmail || ""
         };
@@ -365,8 +366,11 @@
       }
       return null;
     }
-    function vipPhotoUrl(fileId) {
-      return fileId ? `https://lh3.googleusercontent.com/d/${fileId}=s200` : "";
+    // VIP 大頭照 src：優先 base64 data URL（員工邀約即拍）、退回 Drive file ID（永久名冊）
+    function vipPhotoSrc(vip) {
+      if (vip.photoData) return vip.photoData;
+      if (vip.photoFileId) return `https://lh3.googleusercontent.com/d/${vip.photoFileId}=s200`;
+      return "";
     }
 
     function pad(n) { return String(n).padStart(2, "0"); }
@@ -411,7 +415,7 @@
           return `
             <div class="vip-card">
               <div class="vip-photo">
-                ${vip.photoFileId ? `<img src="${vipPhotoUrl(vip.photoFileId)}" alt="" onerror="this.style.display='none'">` : ""}
+                ${(() => { const src = vipPhotoSrc(vip); return src ? `<img src="${src}" alt="" onerror="this.style.display='none'">` : ""; })()}
               </div>
               <div class="vip-info">
                 <div class="vip-name">
