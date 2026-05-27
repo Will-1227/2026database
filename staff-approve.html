@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>員工核可 — 訪客預約</title>
+  <title data-i18n="approve.title">員工核可 — 訪客預約</title>
+  <script src="i18n.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -139,31 +140,43 @@
 
   <div id="loginView" style="display:none;">
     <div class="login-card">
-      <h2>🔐 員工登入</h2>
-      <p>核可訪客預約需要登入企業 Google 帳號</p>
+      <div style="text-align:center; margin-bottom:14px;">
+        <div class="lang-switch">
+          <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+          <button data-lang="en"    onclick="setLang('en')">EN</button>
+          <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+        </div>
+      </div>
+      <h2>🔐 <span data-i18n="approve.loginTitle">員工登入</span></h2>
+      <p data-i18n="approve.loginDesc">核可訪客預約需要登入企業 Google 帳號</p>
       <button class="google-btn" onclick="signIn()">
-        <span>🔵</span> 使用 Google 登入
+        <span>🔵</span> <span data-i18n="common.signIn">使用 Google 登入</span>
       </button>
-      <div class="footer-link"><a href="visitor-index.html">← 回首頁</a></div>
+      <div class="footer-link"><a href="visitor-index.html" data-i18n="common.back">← 回首頁</a></div>
     </div>
   </div>
 
   <div id="mainView" style="display:none;">
     <div class="topbar">
-      <h1>📋 訪客預約核可</h1>
+      <h1>📋 <span data-i18n="approve.title">訪客預約核可</span></h1>
       <div class="user">
+        <div class="lang-switch dark">
+          <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+          <button data-lang="en"    onclick="setLang('en')">EN</button>
+          <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+        </div>
         <span id="userEmail"></span>
-        <button onclick="signOutClick()">登出</button>
+        <button onclick="signOutClick()" data-i18n="common.signOut">登出</button>
       </div>
     </div>
 
     <div class="container">
       <div class="filter-bar">
-        <div class="chip active" data-filter="pending">⏳ 待核可</div>
-        <div class="chip" data-filter="approved">✅ 已核可</div>
-        <div class="chip" data-filter="checkedIn">🟢 已報到</div>
-        <div class="chip" data-filter="cancelled">⛔ 已取消</div>
-        <div class="chip" data-filter="all">全部</div>
+        <div class="chip active" data-filter="pending"   data-i18n="approve.filter.pending">⏳ 待核可</div>
+        <div class="chip"        data-filter="approved"  data-i18n="approve.filter.approved">✅ 已核可</div>
+        <div class="chip"        data-filter="checkedIn" data-i18n="approve.filter.checkedIn">🟢 已報到</div>
+        <div class="chip"        data-filter="cancelled" data-i18n="approve.filter.cancelled">⛔ 已取消</div>
+        <div class="chip"        data-filter="all"       data-i18n="approve.filter.all">全部</div>
       </div>
 
       <div id="visitorList" class="visitor-list"></div>
@@ -193,12 +206,19 @@
     let currentFilter = "pending";
     let allVisitors = [];
 
-    const STATUS_LABEL = {
-      pending:    { text: "待核可", cls: "status-pending" },
-      approved:   { text: "已核可", cls: "status-approved" },
-      checkedIn:  { text: "已報到", cls: "status-checkedIn" },
-      checkedOut: { text: "已離場", cls: "status-checkedIn" },
-      cancelled:  { text: "已取消", cls: "status-cancelled" }
+    const STATUS_CLS = {
+      pending:    "status-pending",
+      approved:   "status-approved",
+      checkedIn:  "status-checkedIn",
+      checkedOut: "status-checkedIn",
+      cancelled:  "status-cancelled"
+    };
+    const STATUS_KEY = {
+      pending:    "status.pending",
+      approved:   "status.approved",
+      checkedIn:  "status.checkedIn",
+      checkedOut: "status.checkedOut",
+      cancelled:  "status.cancelled"
     };
 
     function fmt(ts) {
@@ -220,28 +240,32 @@
         : allVisitors.filter(v => v.status === currentFilter);
 
       if (filtered.length === 0) {
-        list.innerHTML = `<div class="empty">目前沒有「${currentFilter === "all" ? "任何" : STATUS_LABEL[currentFilter]?.text || currentFilter}」的預約</div>`;
+        const label = currentFilter === "all"
+          ? t("approve.emptyAll")
+          : t("approve.empty", { label: t(STATUS_KEY[currentFilter] || "status.pending") });
+        list.innerHTML = `<div class="empty">${escapeHtml(label)}</div>`;
         return;
       }
 
       list.innerHTML = filtered.map(v => {
-        const label = STATUS_LABEL[v.status] || STATUS_LABEL.pending;
+        const cls = STATUS_CLS[v.status] || STATUS_CLS.pending;
+        const labelText = t(STATUS_KEY[v.status] || STATUS_KEY.pending);
         const actions = v.status === "pending"
-          ? `<button class="btn-approve" onclick="approveBooking('${v.id}')">✓ 核可</button>
-             <button class="btn-reject"  onclick="rejectBooking('${v.id}')">✕ 退件</button>`
-          : `<button class="btn-link" onclick="viewQR('${v.qrToken}')">查看 QR</button>`;
+          ? `<button class="btn-approve" onclick="approveBooking('${v.id}')">${escapeHtml(t("approve.btnApprove"))}</button>
+             <button class="btn-reject"  onclick="rejectBooking('${v.id}')">${escapeHtml(t("approve.btnReject"))}</button>`
+          : `<button class="btn-link" onclick="viewQR('${v.qrToken}')">${escapeHtml(t("approve.btnQr"))}</button>`;
 
         return `
           <div class="visitor-card">
             <div class="main">
               <div>
                 <span class="name">${escapeHtml(v.name)}</span>
-                <span class="status ${label.cls}">${label.text}</span>
+                <span class="status ${cls}">${escapeHtml(labelText)}</span>
               </div>
-              <div class="sub">${escapeHtml(v.company || "個人")} · ${escapeHtml(v.phone || "")}</div>
+              <div class="sub">${escapeHtml(v.company || t("common.individual"))} · ${escapeHtml(v.phone || "")}</div>
               <div class="meta">
                 🗓 ${fmt(v.visitAt)}
-                👤 受訪：${escapeHtml(v.hostName)}
+                👤 ${escapeHtml(t("approve.hostPrefix"))}${escapeHtml(v.hostName)}
                 ${v.plateNumber ? "　🚗 " + escapeHtml(v.plateNumber) : ""}
               </div>
               ${v.note ? `<div class="meta" style="color:#888; font-style:italic;">📝 ${escapeHtml(v.note)}</div>` : ""}
@@ -251,6 +275,8 @@
         `;
       }).join("");
     }
+
+    document.addEventListener("i18n:changed", render);
 
     document.querySelectorAll(".chip").forEach(chip => {
       chip.addEventListener("click", () => {
@@ -269,18 +295,18 @@
           approvedBy: auth.currentUser?.email || "unknown",
           updatedAt: serverTimestamp()
         });
-      } catch (e) { alert("核可失敗：" + e.message); }
+      } catch (e) { alert(t("err.approveFail", { msg: e.message })); }
     };
 
     window.rejectBooking = async function(id) {
-      if (!confirm("確定要退件嗎？")) return;
+      if (!confirm(t("approve.confirmReject"))) return;
       try {
         await updateDoc(doc(db, "visitors", id), {
           status: "cancelled",
           approvedBy: auth.currentUser?.email || "unknown",
           updatedAt: serverTimestamp()
         });
-      } catch (e) { alert("退件失敗：" + e.message); }
+      } catch (e) { alert(t("err.rejectFail", { msg: e.message })); }
     };
 
     window.viewQR = function(token) {
@@ -290,7 +316,7 @@
     window.signIn = async function() {
       try {
         await signInWithPopup(auth, new GoogleAuthProvider());
-      } catch (e) { alert("登入失敗：" + e.message); }
+      } catch (e) { alert(t("err.signInFail", { msg: e.message })); }
     };
 
     window.signOutClick = async function() {

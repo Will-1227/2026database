@@ -45,49 +45,59 @@
     .tag-guard   { background: #e8eaf6; color: #283593; }
     .tag-admin   { background: #fce4ec; color: #ad1457; }
     .footer { color: rgba(255,255,255,0.5); font-size: 0.8rem; margin-top: 24px; }
+    .lang-bar { margin-bottom: 18px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🛡 訪客預約系統</h1>
-    <p class="subtitle">Firebase 雲端訪客管理</p>
+    <div class="lang-bar">
+      <div class="lang-switch">
+        <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+        <button data-lang="en"    onclick="setLang('en')">EN</button>
+        <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+      </div>
+    </div>
+
+    <h1>🛡 <span data-i18n="index.title">訪客預約系統</span></h1>
+    <p class="subtitle" data-i18n="index.subtitle">Firebase 雲端訪客管理</p>
 
     <a class="card" href="visitor-book.html">
       <div class="card-emoji">📝</div>
-      <div class="card-title">訪客預約登記</div>
-      <div class="card-desc">外部訪客填表，立即取得到訪 QR Code</div>
-      <span class="tag tag-visitor">🌐 公開頁面</span>
+      <div class="card-title" data-i18n="index.book.title">訪客預約登記</div>
+      <div class="card-desc" data-i18n="index.book.desc">外部訪客填表，立即取得到訪 QR Code</div>
+      <span class="tag tag-visitor" data-i18n="index.book.tag">🌐 公開頁面</span>
     </a>
 
     <a class="card" href="staff-invite.html">
       <div class="card-emoji">📨</div>
-      <div class="card-title">員工邀約</div>
-      <div class="card-desc">員工主動建立邀約，產生 QR 與分享連結</div>
-      <span class="tag tag-staff">🔐 需登入</span>
+      <div class="card-title" data-i18n="index.invite.title">員工邀約</div>
+      <div class="card-desc" data-i18n="index.invite.desc">員工主動建立邀約，產生 QR 與分享連結</div>
+      <span class="tag tag-staff" data-i18n="index.invite.tag">🔐 需登入</span>
     </a>
 
     <a class="card" href="staff-approve.html">
       <div class="card-emoji">📋</div>
-      <div class="card-title">員工核可</div>
-      <div class="card-desc">受訪員工 / 主管核可預約、檢視紀錄</div>
-      <span class="tag tag-staff">🔐 需登入</span>
+      <div class="card-title" data-i18n="index.approve.title">員工核可</div>
+      <div class="card-desc" data-i18n="index.approve.desc">受訪員工 / 主管核可預約、檢視紀錄</div>
+      <span class="tag tag-staff" data-i18n="index.approve.tag">🔐 需登入</span>
     </a>
 
     <a class="card" href="gate-dashboard.html">
       <div class="card-emoji">🛡</div>
-      <div class="card-title">保衛室控台</div>
-      <div class="card-desc">今日訪客名單、掃 QR 自動報到</div>
-      <span class="tag tag-guard">🔐 需登入</span>
+      <div class="card-title" data-i18n="index.gate.title">保衛室控台</div>
+      <div class="card-desc" data-i18n="index.gate.desc">今日訪客名單、掃 QR 自動報到</div>
+      <span class="tag tag-guard" data-i18n="index.gate.tag">🔐 需登入</span>
     </a>
 
     <a class="card" href="admin-vip.html">
       <div class="card-emoji">🌟</div>
-      <div class="card-title">VIP 名冊管理</div>
-      <div class="card-desc">維護重要訪客名單、Google Drive 大頭照</div>
-      <span class="tag tag-admin">🔐 需登入</span>
+      <div class="card-title" data-i18n="index.vip.title">VIP 名冊管理</div>
+      <div class="card-desc" data-i18n="index.vip.desc">維護重要訪客名單、Google Drive 大頭照</div>
+      <span class="tag tag-admin" data-i18n="index.vip.tag">🔐 需登入</span>
     </a>
 
     <p class="footer">Powered by Firebase + Claude Code</p>
   </div>
+  <script src="i18n.js"></script>
 </body>
 </html>

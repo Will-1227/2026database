@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>保衛室 — 今日訪客</title>
+  <title data-i18n="gate.title">保衛室 — 今日訪客</title>
+  <script src="i18n.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -261,26 +262,38 @@
 
   <div id="loginView" style="display:none;">
     <div class="login-card">
-      <h2>🛡 保衛室登入</h2>
-      <p>請以保衛室專用 Google 帳號登入</p>
-      <button class="google-btn" onclick="signIn()">使用 Google 登入</button>
-      <div class="footer-link"><a href="visitor-index.html">← 回首頁</a></div>
+      <div style="text-align:center; margin-bottom:14px;">
+        <div class="lang-switch dark">
+          <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+          <button data-lang="en"    onclick="setLang('en')">EN</button>
+          <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+        </div>
+      </div>
+      <h2>🛡 <span data-i18n="gate.loginTitle">保衛室登入</span></h2>
+      <p data-i18n="gate.loginDesc">請以保衛室專用 Google 帳號登入</p>
+      <button class="google-btn" onclick="signIn()" data-i18n="common.signIn">使用 Google 登入</button>
+      <div class="footer-link"><a href="visitor-index.html" data-i18n="common.back">← 回首頁</a></div>
     </div>
   </div>
 
   <div id="mainView" style="display:none;">
     <div class="topbar">
-      <h1>🛡 保衛室 — 今日訪客 <span id="todayCount" class="badge">0</span></h1>
+      <h1>🛡 <span data-i18n="gate.title">保衛室 — 今日訪客</span> <span id="todayCount" class="badge">0</span></h1>
       <div class="clock" id="clock">--:--:--</div>
       <div class="user">
+        <div class="lang-switch dark">
+          <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+          <button data-lang="en"    onclick="setLang('en')">EN</button>
+          <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+        </div>
         <span id="userEmail"></span>
-        <button onclick="signOutClick()">登出</button>
+        <button onclick="signOutClick()" data-i18n="common.signOut">登出</button>
       </div>
     </div>
 
     <!-- 今日 VIP 警示區（沒命中時隱藏） -->
     <div id="vipPanel" class="panel vip-panel" style="display:none;">
-      <h2>🌟 今日 VIP（<span id="vipCount">0</span> 位）</h2>
+      <h2 id="vipPanelTitle">🌟 今日 VIP（<span id="vipCount">0</span> 位）</h2>
       <div id="vipList"></div>
     </div>
 
@@ -288,20 +301,20 @@
       <!-- 左欄：掃 QR + 結果 -->
       <div>
         <div class="panel">
-          <h2>📷 掃描 QR Code</h2>
+          <h2 data-i18n="gate.scanTitle">📷 掃描 QR Code</h2>
           <div id="scanner"></div>
           <div class="scanner-actions">
-            <button id="startBtn" onclick="startScanner()">啟動相機</button>
-            <button id="stopBtn" class="stop" onclick="stopScanner()" style="display:none;">停止</button>
+            <button id="startBtn" onclick="startScanner()" data-i18n="gate.scanStart">啟動相機</button>
+            <button id="stopBtn" class="stop" onclick="stopScanner()" style="display:none;" data-i18n="gate.scanStop">停止</button>
           </div>
-          <div id="scanResult" class="scan-result">尚未掃描</div>
+          <div id="scanResult" class="scan-result" data-i18n="gate.scanIdle">尚未掃描</div>
         </div>
       </div>
 
       <!-- 右欄：今日清單 -->
       <div>
         <div class="panel">
-          <h2>📋 今日預約名單</h2>
+          <h2 data-i18n="gate.todayList">📋 今日預約名單</h2>
           <div id="visitorList"></div>
         </div>
       </div>
@@ -328,12 +341,19 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const STATUS_LABEL = {
-      pending:    { text: "待核可", cls: "status-pending" },
-      approved:   { text: "已核可", cls: "status-approved" },
-      checkedIn:  { text: "已報到", cls: "status-checkedIn" },
-      checkedOut: { text: "已離場", cls: "status-checkedIn" },
-      cancelled:  { text: "已取消", cls: "status-cancelled" }
+    const STATUS_CLS = {
+      pending:    "status-pending",
+      approved:   "status-approved",
+      checkedIn:  "status-checkedIn",
+      checkedOut: "status-checkedIn",
+      cancelled:  "status-cancelled"
+    };
+    const STATUS_KEY = {
+      pending:    "status.pending",
+      approved:   "status.approved",
+      checkedIn:  "status.checkedIn",
+      checkedOut: "status.checkedOut",
+      cancelled:  "status.cancelled"
     };
 
     let todayVisitors = [];
@@ -404,14 +424,15 @@
       const vipHits = enriched.filter(v => v._vip && v.status !== "cancelled");
       const vipPanel = document.getElementById("vipPanel");
       const vipList = document.getElementById("vipList");
-      document.getElementById("vipCount").textContent = vipHits.length;
+      document.getElementById("vipPanelTitle").innerHTML = t("gate.vipPanel", { count: `<span id="vipCount">${vipHits.length}</span>` });
       if (vipHits.length === 0) {
         vipPanel.style.display = "none";
       } else {
         vipPanel.style.display = "block";
         vipList.innerHTML = vipHits.map(v => {
           const vip = v._vip;
-          const label = STATUS_LABEL[v.status] || STATUS_LABEL.pending;
+          const cls = STATUS_CLS[v.status] || STATUS_CLS.pending;
+          const labelText = t(STATUS_KEY[v.status] || STATUS_KEY.pending);
           return `
             <div class="vip-card">
               <div class="vip-photo">
@@ -420,12 +441,12 @@
               <div class="vip-info">
                 <div class="vip-name">
                   <span class="star">⭐</span>${escapeHtml(vip.name)}
-                  <span class="vip-status status ${label.cls}">${label.text}</span>
+                  <span class="vip-status status ${cls}">${escapeHtml(labelText)}</span>
                 </div>
                 <div class="vip-meta">
-                  ${escapeHtml(vip.title || "")} ${escapeHtml(vip.company || "")}　·　🕐 預約 ${fmtTime(v.visitAt)}${v.checkedInAt ? " · ✅ 實到 " + fmtTime(v.checkedInAt) : ""}
+                  ${escapeHtml(vip.title || "")} ${escapeHtml(vip.company || "")}　·　🕐 ${escapeHtml(t("gate.metaVisit"))} ${fmtTime(v.visitAt)}${v.checkedInAt ? " · " + escapeHtml(t("gate.metaArrival")) + " " + fmtTime(v.checkedInAt) : ""}
                 </div>
-                <div class="vip-meta">受訪：${escapeHtml(v.hostName)}${vip.ownerEmail ? "（窗口 " + escapeHtml(vip.ownerEmail) + "）" : ""}</div>
+                <div class="vip-meta">${escapeHtml(t("gate.metaHost"))}${escapeHtml(v.hostName)}${vip.ownerEmail ? "（" + escapeHtml(vip.ownerEmail) + "）" : ""}</div>
                 ${vip.greetingSOP ? `<div class="vip-sop">💡 ${escapeHtml(vip.greetingSOP)}</div>` : ""}
               </div>
               <div></div>
@@ -436,34 +457,34 @@
 
       // ── 下方今日清單 ──
       if (enriched.length === 0) {
-        el.innerHTML = `<div class="empty">今日尚無預約紀錄</div>`;
+        el.innerHTML = `<div class="empty">${escapeHtml(t("gate.todayEmpty"))}</div>`;
         return;
       }
 
-      // 排序：報到中 → 已核可 → 待核可 → 已離場/取消
       const order = { checkedIn: 0, approved: 1, pending: 2, checkedOut: 3, cancelled: 4 };
       const sorted = [...enriched].sort((a,b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
 
       el.innerHTML = sorted.map(v => {
-        const label = STATUS_LABEL[v.status] || STATUS_LABEL.pending;
+        const cls = STATUS_CLS[v.status] || STATUS_CLS.pending;
+        const labelText = t(STATUS_KEY[v.status] || STATUS_KEY.pending);
         const isVip = !!v._vip;
         let actionBtn = "";
         if (v.status === "approved") {
-          actionBtn = `<button class="btn-checkin" onclick="checkIn('${v.id}')">✓ 報到</button>`;
+          actionBtn = `<button class="btn-checkin" onclick="checkIn('${v.id}')">${escapeHtml(t("gate.btnCheckIn"))}</button>`;
         } else if (v.status === "checkedIn") {
-          actionBtn = `<button class="btn-checkout" onclick="checkOut('${v.id}')">離場</button>`;
+          actionBtn = `<button class="btn-checkout" onclick="checkOut('${v.id}')">${escapeHtml(t("gate.btnCheckOut"))}</button>`;
         }
         return `
           <div class="visitor-row${isVip ? " is-vip" : ""}">
             <div>
               <div>
                 <span class="name">${escapeHtml(v.name)}</span>
-                ${isVip ? `<span class="vip-tag">⭐ VIP</span>` : ""}
-                <span class="status ${label.cls}">${label.text}</span>
+                ${isVip ? `<span class="vip-tag">⭐ ${escapeHtml(t("gate.vipFlag"))}</span>` : ""}
+                <span class="status ${cls}">${escapeHtml(labelText)}</span>
               </div>
               <div class="meta">
-                🕐 預約 ${fmtTime(v.visitAt)}${v.checkedInAt ? ` · ✅ 實到 ${fmtTime(v.checkedInAt)}` : ""}${v.checkedOutAt ? ` · 🚪 離場 ${fmtTime(v.checkedOutAt)}` : ""}
-                <br>${escapeHtml(v.company || "個人")} · 受訪：${escapeHtml(v.hostName)}
+                🕐 ${escapeHtml(t("gate.metaVisit"))} ${fmtTime(v.visitAt)}${v.checkedInAt ? ` · ${escapeHtml(t("gate.metaArrival"))} ${fmtTime(v.checkedInAt)}` : ""}${v.checkedOutAt ? ` · ${escapeHtml(t("gate.metaLeave"))} ${fmtTime(v.checkedOutAt)}` : ""}
+                <br>${escapeHtml(v.company || t("common.individual"))} · ${escapeHtml(t("gate.metaHost"))}${escapeHtml(v.hostName)}
                 ${v.plateNumber ? "<br>🚗 " + escapeHtml(v.plateNumber) : ""}
               </div>
             </div>
@@ -473,6 +494,8 @@
       }).join("");
     }
 
+    document.addEventListener("i18n:changed", renderList);
+
     window.checkIn = async function(id) {
       try {
         await updateDoc(doc(db, "visitors", id), {
@@ -480,7 +503,7 @@
           checkedInAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
-      } catch (e) { alert("報到失敗：" + e.message); }
+      } catch (e) { alert(t("err.checkInFail", { msg: e.message })); }
     };
 
     window.checkOut = async function(id) {
@@ -490,7 +513,7 @@
           checkedOutAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
-      } catch (e) { alert("離場失敗：" + e.message); }
+      } catch (e) { alert(t("err.checkOutFail", { msg: e.message })); }
     };
 
     // ---- QR 掃描 ----
@@ -516,15 +539,15 @@
     async function handleScanned(text) {
       const token = extractToken(text);
       if (!token) {
-        showScanResult("⚠ 無法解析 QR 內容", "error");
+        showScanResult(escapeHtml(t("gate.scanCantParse")), "error");
         return;
       }
       const match = todayVisitors.find(v => v.qrToken === token);
       if (!match) {
-        showScanResult(`❌ 找不到此 QR 對應的預約<br><small>${escapeHtml(token).slice(0, 20)}…</small>`, "error");
+        showScanResult(`${escapeHtml(t("gate.scanNotFound"))}<br><small>${escapeHtml(token).slice(0, 20)}…</small>`, "error");
         return;
       }
-      const label = STATUS_LABEL[match.status]?.text || match.status;
+      const label = t(STATUS_KEY[match.status] || STATUS_KEY.pending);
       let action = "";
       if (match.status === "approved") {
         try {
@@ -533,20 +556,20 @@
             checkedInAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           });
-          action = "<br>✅ 已自動報到";
+          action = "<br>" + escapeHtml(t("gate.scanAutoCheckIn"));
         } catch (e) {
-          action = "<br>⚠ 報到失敗：" + e.message;
+          action = "<br>" + escapeHtml(t("gate.scanCheckInFail", { msg: e.message }));
         }
       } else if (match.status === "pending") {
-        action = "<br>⏳ 此預約尚未核可，請聯絡受訪人員";
+        action = "<br>" + escapeHtml(t("gate.scanNotApproved"));
       } else if (match.status === "checkedIn") {
-        action = "<br>ℹ 此訪客已報到過";
+        action = "<br>" + escapeHtml(t("gate.scanAlreadyIn"));
       } else if (match.status === "cancelled") {
-        action = "<br>⛔ 此預約已取消";
+        action = "<br>" + escapeHtml(t("gate.scanCancelled"));
       }
       const vip = matchVip(match);
       const vipBanner = vip
-        ? `<div class="vip-banner">⭐ VIP 訪客 — ${escapeHtml(vip.title || "")} ${escapeHtml(vip.name)}</div>`
+        ? `<div class="vip-banner">⭐ ${escapeHtml(t("gate.vipFlag"))} — ${escapeHtml(vip.title || "")} ${escapeHtml(vip.name)}</div>`
         : "";
       const vipSop = vip && vip.greetingSOP
         ? `<div class="vip-sop-inline">💡 ${escapeHtml(vip.greetingSOP)}</div>`
@@ -565,7 +588,7 @@
 
     window.startScanner = async function() {
       if (!window.Html5Qrcode) {
-        alert("QR 掃描器未載入");
+        alert(t("gate.scanLibMissing"));
         return;
       }
       try {
@@ -581,7 +604,7 @@
         document.getElementById("startBtn").style.display = "none";
         document.getElementById("stopBtn").style.display = "block";
       } catch (e) {
-        alert("無法啟動相機：" + e.message);
+        alert(t("gate.scanFailedStart", { msg: e.message }));
       }
     };
 
@@ -597,7 +620,7 @@
     window.signIn = async function() {
       try {
         await signInWithPopup(auth, new GoogleAuthProvider());
-      } catch (e) { alert("登入失敗：" + e.message); }
+      } catch (e) { alert(t("err.signInFail", { msg: e.message })); }
     };
 
     window.signOutClick = async function() {
@@ -626,7 +649,7 @@
       }, err => {
         console.error(err);
         document.getElementById("visitorList").innerHTML =
-          `<div class="empty">讀取失敗：${escapeHtml(err.message)}</div>`;
+          `<div class="empty">${escapeHtml(t("confirm.loadFailed", { msg: err.message }))}</div>`;
       });
     }
 
