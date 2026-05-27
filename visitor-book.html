@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>訪客預約登記</title>
+  <title data-i18n="book.title">訪客預約登記</title>
+  <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -197,95 +198,109 @@
 </head>
 <body>
   <div class="card" id="formCard">
+    <div style="text-align:center; margin-bottom:14px;">
+      <div class="lang-switch">
+        <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+        <button data-lang="en"    onclick="setLang('en')">EN</button>
+        <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+      </div>
+    </div>
     <div class="header">
       <div class="emoji">📝</div>
-      <h1>訪客預約登記</h1>
-      <p class="subtitle">填寫資料後即可取得到訪 QR Code</p>
+      <h1 data-i18n="book.title">訪客預約登記</h1>
+      <p class="subtitle" data-i18n="book.subtitle">填寫資料後即可取得到訪 QR Code</p>
     </div>
 
-    <label>姓名 <span class="req">*</span></label>
-    <input type="text" id="name" placeholder="您的姓名" maxlength="40" autocomplete="name">
+    <label><span data-i18n="book.name">姓名</span> <span class="req">*</span></label>
+    <input type="text" id="name" placeholder="您的姓名" data-i18n-placeholder="book.namePh" maxlength="40" autocomplete="name">
 
     <div class="row">
       <div>
-        <label>電話 <span class="req">*</span></label>
-        <input type="tel" id="phone" placeholder="0912345678" maxlength="20" autocomplete="tel">
+        <label><span data-i18n="book.phone">電話</span> <span class="req">*</span></label>
+        <input type="tel" id="phone" placeholder="0912345678" data-i18n-placeholder="book.phonePh" maxlength="20" autocomplete="tel">
       </div>
       <div>
-        <label>Email</label>
-        <input type="email" id="email" placeholder="optional" maxlength="60" autocomplete="email">
+        <label data-i18n="book.email">Email</label>
+        <input type="email" id="email" placeholder="optional" data-i18n-placeholder="book.emailPh" maxlength="60" autocomplete="email">
       </div>
     </div>
 
-    <label>公司 / 單位</label>
-    <input type="text" id="company" placeholder="例如：ABC 股份有限公司" maxlength="60">
+    <label data-i18n="book.company">公司 / 單位</label>
+    <input type="text" id="company" placeholder="例如：ABC 股份有限公司" data-i18n-placeholder="book.companyPh" maxlength="60">
 
-    <label>受訪員工 <span class="req">*</span></label>
-    <input type="text" id="hostName" placeholder="您要拜訪的同仁姓名" maxlength="40">
+    <label><span data-i18n="book.host">受訪員工</span> <span class="req">*</span></label>
+    <input type="text" id="hostName" placeholder="您要拜訪的同仁姓名" data-i18n-placeholder="book.hostPh" maxlength="40">
 
     <div class="row">
       <div>
-        <label>預計到訪 <span class="req">*</span></label>
+        <label><span data-i18n="book.visitAt">預計到訪</span> <span class="req">*</span></label>
         <input type="datetime-local" id="visitAt">
       </div>
       <div>
-        <label>車牌（如有）</label>
-        <input type="text" id="plateNumber" placeholder="ABC-1234" maxlength="15">
+        <label data-i18n="book.plate">車牌（如有）</label>
+        <input type="text" id="plateNumber" placeholder="ABC-1234" data-i18n-placeholder="book.platePh" maxlength="15">
       </div>
     </div>
 
-    <label>備註</label>
-    <textarea id="note" placeholder="會議主題、攜帶物品等" maxlength="200"></textarea>
+    <label data-i18n="common.note">備註</label>
+    <textarea id="note" placeholder="會議主題、攜帶物品等" data-i18n-placeholder="book.notePh" maxlength="200"></textarea>
 
     <div class="consent">
       <input type="checkbox" id="consent">
-      <label for="consent" style="margin:0; font-weight:400; color:#666;">
+      <label for="consent" style="margin:0; font-weight:400; color:#666;" data-i18n="book.consent">
         我同意提供以上資料供本次到訪用途；資料將於 6 個月後自動刪除。
       </label>
     </div>
 
     <div class="error" id="errorMsg"></div>
 
-    <button id="submitBtn" onclick="submitBooking()">送出預約 →</button>
+    <button id="submitBtn" onclick="submitBooking()" data-i18n="book.submit">送出預約 →</button>
 
     <div class="footer-link">
-      <a href="visitor-index.html">← 回首頁</a>
+      <a href="visitor-index.html" data-i18n="common.back">← 回首頁</a>
     </div>
   </div>
 
   <!-- 送出成功後顯示 -->
   <div class="card" id="confirmCard" style="display:none;">
+    <div style="text-align:center; margin-bottom:14px;">
+      <div class="lang-switch">
+        <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+        <button data-lang="en"    onclick="setLang('en')">EN</button>
+        <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+      </div>
+    </div>
     <div class="confirm-header">
       <div class="emoji">✅</div>
-      <h2>預約已送出</h2>
-      <div class="status-badge">等待核可</div>
+      <h2 data-i18n="confirm.title">預約已送出</h2>
+      <div class="status-badge" data-i18n="status.pending">等待核可</div>
     </div>
 
     <div class="qr-wrap">
       <div id="qrcode"></div>
-      <p style="margin-top:12px; color:#888; font-size:0.85rem;">到訪時請出示此 QR 碼</p>
+      <p style="margin-top:12px; color:#888; font-size:0.85rem;" data-i18n="confirm.qrHint">到訪時請出示此 QR 碼</p>
     </div>
 
     <div class="info-block" id="infoBlock"></div>
 
     <div class="actions">
-      <a id="downloadBtn" class="btn btn-primary" download="visitor-qr.png">⬇ 下載 QR</a>
-      <button class="btn btn-secondary" onclick="downloadICS()">📅 加入行事曆</button>
+      <a id="downloadBtn" class="btn btn-primary" download="visitor-qr.png" data-i18n="confirm.downloadQr">⬇ 下載 QR</a>
+      <button class="btn btn-secondary" onclick="downloadICS()" data-i18n="confirm.addCalendar">📅 加入行事曆</button>
     </div>
 
     <div class="share-link" id="shareLinkBox">
-      <strong>📎 可分享連結：</strong><br>
+      <strong data-i18n="confirm.shareLink">📎 可分享連結：</strong><br>
       <span id="shareLink"></span><br>
-      <button onclick="copyLink()">複製連結</button>
+      <button onclick="copyLink()" data-i18n="common.copyLink">複製連結</button>
     </div>
 
-    <div class="hint">
+    <div class="hint" data-i18n-html="confirm.hint">
       💡 請截圖保存 QR，或複製上方連結保存。<br>
       到訪當日由保衛室掃描 QR 即可完成報到。
     </div>
 
     <div class="footer-link">
-      <a href="visitor-book.html">+ 再預約一筆</a>　·　<a href="visitor-index.html">回首頁</a>
+      <a href="visitor-book.html" data-i18n="book.bookAgain">+ 再預約一筆</a>　·　<a href="visitor-index.html" data-i18n="common.back">回首頁</a>
     </div>
   </div>
 
@@ -336,18 +351,18 @@
 
       document.getElementById("errorMsg").style.display = "none";
 
-      if (!data.name) return showError("請填寫姓名");
-      if (!data.phone) return showError("請填寫電話");
-      if (!data.hostName) return showError("請填寫受訪員工");
-      if (!data.visitAtStr) return showError("請選擇預計到訪時間");
-      if (!consent) return showError("請勾選同意條款");
+      if (!data.name) return showError(t("err.fillName"));
+      if (!data.phone) return showError(t("err.fillPhone"));
+      if (!data.hostName) return showError(t("err.fillHost"));
+      if (!data.visitAtStr) return showError(t("err.fillVisitAt"));
+      if (!consent) return showError(t("err.fillConsent"));
 
       const visitAt = new Date(data.visitAtStr);
-      if (isNaN(visitAt.getTime())) return showError("到訪時間格式錯誤");
+      if (isNaN(visitAt.getTime())) return showError(t("err.badDateTime"));
 
       const btn = document.getElementById("submitBtn");
       btn.disabled = true;
-      btn.textContent = "送出中…";
+      btn.textContent = t("common.processing");
 
       try {
         const qrToken = (crypto.randomUUID ? crypto.randomUUID()
@@ -375,9 +390,9 @@
 
         showConfirmation(qrToken, data, visitAt);
       } catch (e) {
-        showError("送出失敗：" + e.message);
+        showError(t("err.submitFail", { msg: e.message }));
         btn.disabled = false;
-        btn.textContent = "送出預約 →";
+        btn.textContent = t("book.submit");
       }
     };
 
@@ -412,11 +427,11 @@
         return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
       };
       document.getElementById("infoBlock").innerHTML = `
-        <div class="info-row"><span class="label">訪客</span><span class="value">${escapeHtml(data.name)}</span></div>
-        <div class="info-row"><span class="label">公司</span><span class="value">${escapeHtml(data.company || "—")}</span></div>
-        <div class="info-row"><span class="label">受訪</span><span class="value">${escapeHtml(data.hostName)}</span></div>
-        <div class="info-row"><span class="label">時間</span><span class="value">${fmt(visitAt)}</span></div>
-        ${data.plateNumber ? `<div class="info-row"><span class="label">車牌</span><span class="value">${escapeHtml(data.plateNumber)}</span></div>` : ""}
+        <div class="info-row"><span class="label">${t("confirm.guestLabel")}</span><span class="value">${escapeHtml(data.name)}</span></div>
+        <div class="info-row"><span class="label">${t("confirm.companyLabel")}</span><span class="value">${escapeHtml(data.company || "—")}</span></div>
+        <div class="info-row"><span class="label">${t("confirm.hostLabel")}</span><span class="value">${escapeHtml(data.hostName)}</span></div>
+        <div class="info-row"><span class="label">${t("confirm.timeLabel")}</span><span class="value">${fmt(visitAt)}</span></div>
+        ${data.plateNumber ? `<div class="info-row"><span class="label">${t("confirm.plateLabel")}</span><span class="value">${escapeHtml(data.plateNumber)}</span></div>` : ""}
       `;
 
       // QR 內容：有完整網址就編 URL（手機掃會自動開頁面），否則編純 token
@@ -456,7 +471,7 @@
         a.download = `visitor-qr-${data.name}.png`;
       } catch (err) {
         console.error("QR encode failed:", err);
-        qrEl.innerHTML = `<div style="padding:30px; color:#888;">QR 產生失敗：${escapeHtml(err.message)}</div>`;
+        qrEl.innerHTML = `<div style="padding:30px; color:#888;">${escapeHtml(t("confirm.qrFailed", { msg: err.message }))}</div>`;
       }
     }
 
@@ -472,15 +487,15 @@
       const text = document.getElementById("shareLink").textContent;
       try {
         await navigator.clipboard.writeText(text);
-        alert("連結已複製");
+        alert(t("common.copied"));
       } catch {
         // fallback
         const ta = document.createElement("textarea");
         ta.value = text;
         document.body.appendChild(ta);
         ta.select();
-        try { document.execCommand("copy"); alert("連結已複製"); }
-        catch { alert("請手動長按連結複製"); }
+        try { document.execCommand("copy"); alert(t("common.copied")); }
+        catch { alert(t("common.copied")); }
         ta.remove();
       }
     };

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>預約確認</title>
+  <title data-i18n="confirm.title">預約確認</title>
+  <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -105,34 +106,41 @@
 </head>
 <body>
   <div class="card">
-    <div id="loading" class="loading">載入中…</div>
+    <div style="text-align:center; margin-bottom:14px;">
+      <div class="lang-switch">
+        <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+        <button data-lang="en"    onclick="setLang('en')">EN</button>
+        <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+      </div>
+    </div>
+    <div id="loading" class="loading" data-i18n="common.loading">載入中…</div>
     <div id="error" class="error" style="display:none;"></div>
     <div id="content" style="display:none;">
       <div class="header">
         <div class="emoji">✅</div>
-        <h1>預約已送出</h1>
+        <h1 data-i18n="confirm.title">預約已送出</h1>
         <div id="statusBadge" class="status status-pending">等待核可</div>
       </div>
 
       <div class="qr-wrap">
         <div id="qrcode"></div>
-        <p style="margin-top:12px; color:#888; font-size:0.85rem;">到訪時請出示此 QR 碼</p>
+        <p style="margin-top:12px; color:#888; font-size:0.85rem;" data-i18n="confirm.qrHint">到訪時請出示此 QR 碼</p>
       </div>
 
       <div class="info" id="infoBlock"></div>
 
       <div class="actions">
-        <a id="downloadBtn" class="btn btn-primary" download="visitor-qr.png">⬇ 下載 QR</a>
-        <button class="btn btn-secondary" onclick="downloadICS()">📅 加入行事曆</button>
+        <a id="downloadBtn" class="btn btn-primary" download="visitor-qr.png" data-i18n="confirm.downloadQr">⬇ 下載 QR</a>
+        <button class="btn btn-secondary" onclick="downloadICS()" data-i18n="confirm.addCalendar">📅 加入行事曆</button>
       </div>
 
-      <div class="hint">
+      <div class="hint" data-i18n-html="confirm.hint">
         💡 請將此頁面網址加入書籤或截圖保存。<br>
         到訪當日由保衛室掃描此 QR 即可完成報到。
       </div>
 
       <div class="footer-link">
-        <a href="visitor-book.html">+ 再預約一筆</a>
+        <a href="visitor-book.html" data-i18n="book.bookAgain">+ 再預約一筆</a>
       </div>
     </div>
   </div>
@@ -157,12 +165,19 @@
     const params = new URLSearchParams(location.search);
     const token = params.get("token");
 
-    const STATUS_LABEL = {
-      pending:    { text: "等待核可", cls: "status-pending" },
-      approved:   { text: "已核可，可到訪", cls: "status-approved" },
-      checkedIn:  { text: "已報到", cls: "status-checkedIn" },
-      checkedOut: { text: "已離場", cls: "status-checkedIn" },
-      cancelled:  { text: "已取消", cls: "status-cancelled" }
+    const STATUS_CLS = {
+      pending:    "status-pending",
+      approved:   "status-approved",
+      checkedIn:  "status-checkedIn",
+      checkedOut: "status-checkedIn",
+      cancelled:  "status-cancelled"
+    };
+    const STATUS_KEY = {
+      pending:    "status.pending",
+      approved:   "status.approved",
+      checkedIn:  "status.checkedIn",
+      checkedOut: "status.checkedOut",
+      cancelled:  "status.cancelled"
     };
 
     function fmt(ts) {
@@ -178,20 +193,7 @@
       visitData = data;
       document.getElementById("loading").style.display = "none";
       document.getElementById("content").style.display = "block";
-
-      const label = STATUS_LABEL[data.status] || STATUS_LABEL.pending;
-      const badge = document.getElementById("statusBadge");
-      badge.textContent = label.text;
-      badge.className = "status " + label.cls;
-
-      const info = document.getElementById("infoBlock");
-      info.innerHTML = `
-        <div class="row"><span class="label">訪客</span><span class="value">${escapeHtml(data.name)}</span></div>
-        <div class="row"><span class="label">公司</span><span class="value">${escapeHtml(data.company || "—")}</span></div>
-        <div class="row"><span class="label">受訪</span><span class="value">${escapeHtml(data.hostName)}</span></div>
-        <div class="row"><span class="label">時間</span><span class="value">${fmt(data.visitAt)}</span></div>
-        ${data.plateNumber ? `<div class="row"><span class="label">車牌</span><span class="value">${escapeHtml(data.plateNumber)}</span></div>` : ""}
-      `;
+      renderStatusAndInfo();
 
       // 產生 QR：有完整 http/https origin 就編 URL，否則只編 token
       const proto = location.protocol;
@@ -231,9 +233,30 @@
         a.download = `visitor-qr-${data.name}.png`;
       } catch (err) {
         console.error("QR encode failed:", err);
-        qrEl.innerHTML = `<div style="padding:30px; color:#888;">QR 產生失敗：${escapeHtml(err.message)}</div>`;
+        qrEl.innerHTML = `<div style="padding:30px; color:#888;">${escapeHtml(t("confirm.qrFailed", { msg: err.message }))}</div>`;
       }
     }
+
+    function renderStatusAndInfo() {
+      if (!visitData) return;
+      const data = visitData;
+      const badge = document.getElementById("statusBadge");
+      const cls = STATUS_CLS[data.status] || STATUS_CLS.pending;
+      const key = STATUS_KEY[data.status] || STATUS_KEY.pending;
+      badge.textContent = t(key);
+      badge.className = "status " + cls;
+
+      document.getElementById("infoBlock").innerHTML = `
+        <div class="row"><span class="label">${t("confirm.guestLabel")}</span><span class="value">${escapeHtml(data.name)}</span></div>
+        <div class="row"><span class="label">${t("confirm.companyLabel")}</span><span class="value">${escapeHtml(data.company || "—")}</span></div>
+        <div class="row"><span class="label">${t("confirm.hostLabel")}</span><span class="value">${escapeHtml(data.hostName)}</span></div>
+        <div class="row"><span class="label">${t("confirm.timeLabel")}</span><span class="value">${fmt(data.visitAt)}</span></div>
+        ${data.plateNumber ? `<div class="row"><span class="label">${t("confirm.plateLabel")}</span><span class="value">${escapeHtml(data.plateNumber)}</span></div>` : ""}
+      `;
+    }
+
+    // 語言切換時重繪
+    document.addEventListener("i18n:changed", renderStatusAndInfo);
 
     function escapeHtml(s) {
       return String(s ?? "").replace(/[&<>"']/g, c =>
@@ -274,16 +297,16 @@
     };
 
     if (!token) {
-      showError("缺少 token，無法顯示預約資料");
+      showError(t("confirm.noToken"));
     } else {
       const q = query(collection(db, "visitors"), where("qrToken", "==", token), limit(1));
       onSnapshot(q, snap => {
         if (snap.empty) {
-          showError("找不到此預約紀錄");
+          showError(t("confirm.notFound"));
           return;
         }
         render(snap.docs[0].data());
-      }, err => showError("讀取失敗：" + err.message));
+      }, err => showError(t("confirm.loadFailed", { msg: err.message })));
     }
   </script>
 </body>

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VIP 名冊管理</title>
+  <title data-i18n="vip.title">VIP 名冊管理</title>
+  <script src="i18n.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -188,65 +189,77 @@
 
   <div id="loginView" style="display:none;">
     <div class="login-card">
-      <h2>🔐 主管登入</h2>
-      <p>管理 VIP 名冊需要登入 Google 帳號</p>
-      <button class="google-btn" onclick="signIn()">使用 Google 登入</button>
-      <div class="footer-link"><a href="visitor-index.html">← 回首頁</a></div>
+      <div style="text-align:center; margin-bottom:14px;">
+        <div class="lang-switch">
+          <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+          <button data-lang="en"    onclick="setLang('en')">EN</button>
+          <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+        </div>
+      </div>
+      <h2>🔐 <span data-i18n="vip.loginTitle">主管登入</span></h2>
+      <p data-i18n="vip.loginDesc">管理 VIP 名冊需要登入 Google 帳號</p>
+      <button class="google-btn" onclick="signIn()" data-i18n="common.signIn">使用 Google 登入</button>
+      <div class="footer-link"><a href="visitor-index.html" data-i18n="common.back">← 回首頁</a></div>
     </div>
   </div>
 
   <div id="mainView" style="display:none;">
     <div class="topbar">
-      <h1>🌟 VIP 名冊管理</h1>
+      <h1>🌟 <span data-i18n="vip.title">VIP 名冊管理</span></h1>
       <div class="user">
+        <div class="lang-switch dark">
+          <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+          <button data-lang="en"    onclick="setLang('en')">EN</button>
+          <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+        </div>
         <span id="userEmail"></span>
-        <button onclick="signOutClick()">登出</button>
+        <button onclick="signOutClick()" data-i18n="common.signOut">登出</button>
       </div>
     </div>
 
     <div class="container">
       <!-- 左：表單 -->
       <div class="panel">
-        <h2 id="formTitle">＋ 新增 VIP</h2>
+        <h2 id="formTitle" data-i18n="vip.formAdd">＋ 新增 VIP</h2>
 
-        <label>姓名 <span class="req">*</span> <span class="hint">與訪客預約姓名一致即自動比對</span></label>
-        <input type="text" id="f_name" maxlength="40" placeholder="王董事長">
+        <label><span data-i18n="vip.fieldName">姓名</span> <span class="req">*</span> <span class="hint" data-i18n="vip.fieldNameHint">與訪客預約姓名一致即自動比對</span></label>
+        <input type="text" id="f_name" maxlength="40" placeholder="王董事長" data-i18n-placeholder="vip.fieldNamePh">
 
-        <label>公司 <span class="hint">備查</span></label>
-        <input type="text" id="f_company" maxlength="60" placeholder="ABC 集團">
+        <label><span data-i18n="vip.fieldCompany">公司</span> <span class="hint" data-i18n="vip.fieldRef">備查</span></label>
+        <input type="text" id="f_company" maxlength="60" placeholder="ABC 集團" data-i18n-placeholder="vip.fieldCompanyPh">
 
-        <label>職稱 <span class="hint">備查</span></label>
-        <input type="text" id="f_title" maxlength="40" placeholder="董事長 / 執行長">
+        <label><span data-i18n="vip.fieldTitle">職稱</span> <span class="hint" data-i18n="vip.fieldRef">備查</span></label>
+        <input type="text" id="f_title" maxlength="40" placeholder="董事長 / 執行長" data-i18n-placeholder="vip.fieldTitlePh">
 
-        <label>電話 <span class="hint">備查</span></label>
-        <input type="tel" id="f_phone" maxlength="20" placeholder="0912345678">
+        <label><span data-i18n="vip.fieldPhone">電話</span> <span class="hint" data-i18n="vip.fieldRef">備查</span></label>
+        <input type="tel" id="f_phone" maxlength="20" placeholder="0912345678" data-i18n-placeholder="book.phonePh">
 
-        <label>Email <span class="hint">備查</span></label>
-        <input type="email" id="f_email" maxlength="60" placeholder="vip@company.com">
+        <label><span data-i18n="vip.fieldEmail">Email</span> <span class="hint" data-i18n="vip.fieldRef">備查</span></label>
+        <input type="email" id="f_email" maxlength="60" placeholder="vip@company.com" data-i18n-placeholder="vip.fieldEmailPh">
 
-        <label>Google Drive 大頭照連結 <span class="hint">公開可檢視</span></label>
-        <input type="text" id="f_photo" placeholder="https://drive.google.com/file/d/.../view 或檔案 ID" oninput="updatePhotoPreview()">
-        <div class="photo-preview" id="photoPreview">尚未設定照片</div>
+        <label><span data-i18n="vip.fieldPhoto">Google Drive 大頭照連結</span> <span class="hint" data-i18n="vip.fieldPhotoHint">公開可檢視</span></label>
+        <input type="text" id="f_photo" placeholder="https://drive.google.com/file/d/.../view 或檔案 ID" data-i18n-placeholder="vip.fieldPhotoPh" oninput="updatePhotoPreview()">
+        <div class="photo-preview" id="photoPreview" data-i18n="vip.photoEmpty">尚未設定照片</div>
 
-        <label>對接窗口員工 Email</label>
-        <input type="email" id="f_owner" maxlength="60" placeholder="staff@company.com">
+        <label data-i18n="vip.fieldOwner">對接窗口員工 Email</label>
+        <input type="email" id="f_owner" maxlength="60" placeholder="staff@company.com" data-i18n-placeholder="vip.fieldOwnerPh">
 
-        <label>接待 SOP 備註</label>
-        <textarea id="f_sop" maxlength="200" placeholder="例：請帶往 9F 貴賓室；總經理會親自接待"></textarea>
+        <label data-i18n="vip.fieldSop">接待 SOP 備註</label>
+        <textarea id="f_sop" maxlength="200" placeholder="例：請帶往 9F 貴賓室；總經理會親自接待" data-i18n-placeholder="vip.fieldSopPh"></textarea>
 
         <div class="error" id="errorMsg"></div>
 
         <div class="form-actions">
-          <button class="btn-save" id="saveBtn" onclick="saveVip()">儲存</button>
-          <button class="btn-cancel" onclick="resetForm()">取消</button>
+          <button class="btn-save" id="saveBtn" onclick="saveVip()" data-i18n="common.save">儲存</button>
+          <button class="btn-cancel" onclick="resetForm()" data-i18n="common.cancel">取消</button>
         </div>
       </div>
 
       <!-- 右：名單 -->
       <div class="panel">
-        <h2>📋 名冊（<span id="vipCount">0</span> 位）</h2>
+        <h2 id="listTitle">📋 名冊（<span id="vipCount">0</span> 位）</h2>
         <div class="vip-list" id="vipList"></div>
-        <div class="footer-link" style="margin-top:20px;"><a href="visitor-index.html">← 回首頁</a></div>
+        <div class="footer-link" style="margin-top:20px;"><a href="visitor-index.html" data-i18n="common.back">← 回首頁</a></div>
       </div>
     </div>
   </div>
@@ -299,9 +312,9 @@
       const id = extractDriveFileId(document.getElementById("f_photo").value);
       const el = document.getElementById("photoPreview");
       if (id) {
-        el.innerHTML = `<img src="${photoUrl(id)}" alt="預覽" onerror="this.parentNode.innerHTML='⚠ 圖片無法載入<br><small>請確認 Drive 連結已設為「任何人皆可檢視」</small>'">`;
+        el.innerHTML = `<img src="${photoUrl(id)}" alt="" onerror="this.parentNode.innerHTML='${t("vip.photoLoadFail").replace(/'/g, "\\'")}'">`;
       } else {
-        el.textContent = document.getElementById("f_photo").value ? "⚠ 無法解析連結" : "尚未設定照片";
+        el.textContent = document.getElementById("f_photo").value ? t("vip.photoBadLink") : t("vip.photoEmpty");
       }
     };
 
@@ -313,23 +326,23 @@
 
     window.resetForm = function() {
       editingId = null;
-      document.getElementById("formTitle").textContent = "＋ 新增 VIP";
+      document.getElementById("formTitle").textContent = t("vip.formAdd");
       ["f_name","f_company","f_title","f_phone","f_email","f_photo","f_owner","f_sop"].forEach(id => {
         document.getElementById(id).value = "";
       });
-      document.getElementById("photoPreview").textContent = "尚未設定照片";
+      document.getElementById("photoPreview").textContent = t("vip.photoEmpty");
       document.getElementById("errorMsg").style.display = "none";
-      document.getElementById("saveBtn").textContent = "儲存";
+      document.getElementById("saveBtn").textContent = t("common.save");
     };
 
     window.saveVip = async function() {
       document.getElementById("errorMsg").style.display = "none";
       const name = document.getElementById("f_name").value.trim();
-      if (!name) return showError("請填寫姓名");
+      if (!name) return showError(t("err.fillName"));
 
       const photoInput = document.getElementById("f_photo").value.trim();
       const photoFileId = extractDriveFileId(photoInput);
-      if (photoInput && !photoFileId) return showError("Drive 連結無法解析，請確認格式");
+      if (photoInput && !photoFileId) return showError(t("vip.errBadDriveLink"));
 
       const data = {
         name,
@@ -347,7 +360,7 @@
 
       const btn = document.getElementById("saveBtn");
       btn.disabled = true;
-      btn.textContent = "儲存中…";
+      btn.textContent = t("common.processing");
 
       try {
         if (editingId) {
@@ -361,10 +374,10 @@
         }
         resetForm();
       } catch (e) {
-        showError("儲存失敗：" + e.message);
+        showError(t("err.saveFail", { msg: e.message }));
       } finally {
         btn.disabled = false;
-        btn.textContent = "儲存";
+        btn.textContent = editingId ? t("vip.saveChanges") : t("common.save");
       }
     };
 
@@ -372,7 +385,7 @@
       const v = allVips.find(x => x.id === id);
       if (!v) return;
       editingId = id;
-      document.getElementById("formTitle").textContent = "✏ 編輯 VIP";
+      document.getElementById("formTitle").textContent = t("vip.formEdit");
       document.getElementById("f_name").value = v.name || "";
       document.getElementById("f_company").value = v.company || "";
       document.getElementById("f_title").value = v.title || "";
@@ -382,7 +395,7 @@
       document.getElementById("f_owner").value = v.ownerEmail || "";
       document.getElementById("f_sop").value = v.greetingSOP || "";
       window.updatePhotoPreview();
-      document.getElementById("saveBtn").textContent = "儲存變更";
+      document.getElementById("saveBtn").textContent = t("vip.saveChanges");
       window.scrollTo(0, 0);
     };
 
@@ -391,23 +404,23 @@
       if (!v) return;
       try {
         await updateDoc(doc(db, "vips", id), { active: !v.active, updatedAt: serverTimestamp() });
-      } catch (e) { alert("操作失敗：" + e.message); }
+      } catch (e) { alert(t("err.opFail", { msg: e.message })); }
     };
 
     window.deleteVip = async function(id) {
       const v = allVips.find(x => x.id === id);
       if (!v) return;
-      if (!confirm(`確定刪除「${v.name}」？此動作無法復原。`)) return;
+      if (!confirm(t("vip.confirmDelete", { name: v.name }))) return;
       try {
         await deleteDoc(doc(db, "vips", id));
-      } catch (e) { alert("刪除失敗：" + e.message); }
+      } catch (e) { alert(t("err.deleteFail", { msg: e.message })); }
     };
 
     function renderList() {
       const el = document.getElementById("vipList");
-      document.getElementById("vipCount").textContent = allVips.length;
+      document.getElementById("listTitle").innerHTML = "📋 " + t("vip.listTitle", { count: `<span id="vipCount">${allVips.length}</span>` });
       if (allVips.length === 0) {
-        el.innerHTML = `<div class="empty">尚無 VIP 資料，請從左側新增</div>`;
+        el.innerHTML = `<div class="empty">${escapeHtml(t("vip.empty"))}</div>`;
         return;
       }
       el.innerHTML = allVips.map(v => `
@@ -418,23 +431,26 @@
               : ""}
           </div>
           <div class="vip-info">
-            <div class="name">${escapeHtml(v.name)}${v.active === false ? "（停用）" : ""}</div>
+            <div class="name">${escapeHtml(v.name)}${v.active === false ? escapeHtml(t("vip.cardInactive")) : ""}</div>
             <div class="meta">${escapeHtml(v.title || "")} ${escapeHtml(v.company || "")}</div>
             <div class="meta">${escapeHtml(v.phone || "")} ${v.email ? "· " + escapeHtml(v.email) : ""}</div>
             ${v.greetingSOP ? `<div class="sop">💡 ${escapeHtml(v.greetingSOP)}</div>` : ""}
           </div>
           <div class="vip-actions">
-            <button class="btn-edit" onclick="editVip('${v.id}')">編輯</button>
-            <button class="btn-toggle" onclick="toggleActive('${v.id}')">${v.active === false ? "啟用" : "停用"}</button>
-            <button class="btn-delete" onclick="deleteVip('${v.id}')">刪除</button>
+            <button class="btn-edit" onclick="editVip('${v.id}')">${escapeHtml(t("common.edit"))}</button>
+            <button class="btn-toggle" onclick="toggleActive('${v.id}')">${escapeHtml(v.active === false ? t("common.enable") : t("common.disable"))}</button>
+            <button class="btn-delete" onclick="deleteVip('${v.id}')">${escapeHtml(t("common.delete"))}</button>
           </div>
         </div>
       `).join("");
     }
 
+    // 語言切換時重繪 list
+    document.addEventListener("i18n:changed", renderList);
+
     window.signIn = async function() {
       try { await signInWithPopup(auth, new GoogleAuthProvider()); }
-      catch (e) { alert("登入失敗：" + e.message); }
+      catch (e) { alert(t("err.signInFail", { msg: e.message })); }
     };
     window.signOutClick = async function() { await signOut(auth); };
 
@@ -451,7 +467,7 @@
           renderList();
         }, err => {
           document.getElementById("vipList").innerHTML =
-            `<div class="empty">讀取失敗：${escapeHtml(err.message)}</div>`;
+            `<div class="empty">${escapeHtml(t("confirm.loadFailed", { msg: err.message }))}</div>`;
         });
       } else {
         if (unsub) { unsub(); unsub = null; }
