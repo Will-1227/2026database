@@ -108,18 +108,20 @@
       font-size: 0.85rem;
     }
     .footer-link a { color: #667eea; text-decoration: none; }
-    .brand-bar {
-      text-align: center;
-      margin-bottom: 6px;
+    /* logo 移到白卡外，在頁面紫色背景上直接顯示透明 logo */
+    .page-wrap {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
     }
     .brand-logo {
-      max-width: 200px;
-      width: 65%;
-      height: auto;
-      /* logo 為白字透明底，淺色卡片內需要暗色背景才看得到，外加微妙底色 */
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      padding: 8px 14px;
-      border-radius: 10px;
+      display: block;
+      height: 150px;
+      width: auto;
+      max-width: 100%;
     }
 
     /* 送出成功後的確認區 */
@@ -210,10 +212,10 @@
   </style>
 </head>
 <body>
+  <div class="page-wrap">
+    <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
+
   <div class="card" id="formCard">
-    <div class="brand-bar">
-      <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
-    </div>
     <div style="text-align:center; margin-bottom:14px;">
       <div class="lang-switch">
         <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
@@ -279,9 +281,6 @@
 
   <!-- 送出成功後顯示 -->
   <div class="card" id="confirmCard" style="display:none;">
-    <div class="brand-bar">
-      <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
-    </div>
     <div style="text-align:center; margin-bottom:14px;">
       <div class="lang-switch">
         <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
@@ -322,6 +321,7 @@
       <a href="visitor-book.html" data-i18n="book.bookAgain">+ 再預約一筆</a>　·　<a href="visitor-index.html" data-i18n="common.back">回首頁</a>
     </div>
   </div>
+  </div><!-- /.page-wrap -->
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";

@@ -249,23 +249,20 @@
       line-height: 1.55;
     }
 
-    /* Logo */
-    .brand-bar { text-align: center; margin-bottom: 6px; }
-    .brand-logo {
-      max-width: 200px;
-      width: 65%;
-      height: auto;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      padding: 8px 14px;
-      border-radius: 10px;
+    /* Logo 移到白卡外 */
+    .page-wrap {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
     }
-    .brand-logo-mini {
-      height: 30px;
+    .brand-logo {
+      display: block;
+      height: 150px;
       width: auto;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      padding: 4px 8px;
-      border-radius: 6px;
-      vertical-align: middle;
+      max-width: 100%;
     }
 
     /* 登入畫面 */
@@ -287,11 +284,11 @@
 </head>
 <body>
 
+  <div class="page-wrap">
+    <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
+
   <div id="loginView" class="card" style="display:none;">
     <div class="login-card">
-      <div class="brand-bar">
-        <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
-      </div>
       <div style="text-align:center; margin-bottom:14px;">
         <div class="lang-switch">
           <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
@@ -309,9 +306,6 @@
 
   <!-- 表單 -->
   <div id="formCard" class="card" style="display:none;">
-    <div class="brand-bar">
-      <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
-    </div>
     <div class="topbar-mini">
       <span>👤 <span id="userEmail"></span></span>
       <div class="lang-switch">
@@ -390,9 +384,6 @@
 
   <!-- 成功確認 -->
   <div id="confirmCard" class="card" style="display:none;">
-    <div class="brand-bar">
-      <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
-    </div>
     <div class="topbar-mini">
       <span>👤 <span id="userEmail2"></span></span>
       <div class="lang-switch">
@@ -435,6 +426,7 @@
       <a href="#" onclick="startNew(); return false;" data-i18n="invite.inviteAgain">+ 再邀約一位</a>　·　<a href="visitor-index.html" data-i18n="common.back">回首頁</a>
     </div>
   </div>
+  </div><!-- /.page-wrap -->
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
