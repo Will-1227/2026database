@@ -249,6 +249,25 @@
       line-height: 1.55;
     }
 
+    /* Logo */
+    .brand-bar { text-align: center; margin-bottom: 6px; }
+    .brand-logo {
+      max-width: 200px;
+      width: 65%;
+      height: auto;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 8px 14px;
+      border-radius: 10px;
+    }
+    .brand-logo-mini {
+      height: 30px;
+      width: auto;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 4px 8px;
+      border-radius: 6px;
+      vertical-align: middle;
+    }
+
     /* 登入畫面 */
     .login-card { text-align: center; }
     .google-btn {
@@ -270,6 +289,9 @@
 
   <div id="loginView" class="card" style="display:none;">
     <div class="login-card">
+      <div class="brand-bar">
+        <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
+      </div>
       <div style="text-align:center; margin-bottom:14px;">
         <div class="lang-switch">
           <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
@@ -287,6 +309,9 @@
 
   <!-- 表單 -->
   <div id="formCard" class="card" style="display:none;">
+    <div class="brand-bar">
+      <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
+    </div>
     <div class="topbar-mini">
       <span>👤 <span id="userEmail"></span></span>
       <div class="lang-switch">
@@ -365,6 +390,9 @@
 
   <!-- 成功確認 -->
   <div id="confirmCard" class="card" style="display:none;">
+    <div class="brand-bar">
+      <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
+    </div>
     <div class="topbar-mini">
       <span>👤 <span id="userEmail2"></span></span>
       <div class="lang-switch">

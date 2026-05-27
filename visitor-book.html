@@ -108,6 +108,19 @@
       font-size: 0.85rem;
     }
     .footer-link a { color: #667eea; text-decoration: none; }
+    .brand-bar {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .brand-logo {
+      max-width: 200px;
+      width: 65%;
+      height: auto;
+      /* logo 為白字透明底，淺色卡片內需要暗色背景才看得到，外加微妙底色 */
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 8px 14px;
+      border-radius: 10px;
+    }
 
     /* 送出成功後的確認區 */
     .confirm-header { text-align: center; margin-bottom: 18px; }
@@ -198,6 +211,9 @@
 </head>
 <body>
   <div class="card" id="formCard">
+    <div class="brand-bar">
+      <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
+    </div>
     <div style="text-align:center; margin-bottom:14px;">
       <div class="lang-switch">
         <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
@@ -263,6 +279,9 @@
 
   <!-- 送出成功後顯示 -->
   <div class="card" id="confirmCard" style="display:none;">
+    <div class="brand-bar">
+      <img class="brand-logo" src="assets/jye-shing-logo.png" alt="杰興工業 JYE SHING INDUSTRIAL CO.,LTD">
+    </div>
     <div style="text-align:center; margin-bottom:14px;">
       <div class="lang-switch">
         <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
