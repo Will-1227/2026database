@@ -93,6 +93,33 @@
       align-items: flex-start;
     }
     .consent input { width: auto; margin-top: 3px; }
+    .privacy-details {
+      margin-top: 10px;
+      padding: 12px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.65;
+      color: #555;
+    }
+    .privacy-details h4 {
+      font-size: 0.85rem;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    .privacy-details p { margin-bottom: 6px; }
+    .privacy-details p:last-child { margin-bottom: 0; color: #888; font-style: italic; }
+    .privacy-toggle {
+      display: inline-block;
+      margin-top: 8px;
+      color: #667eea;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      user-select: none;
+    }
+    .privacy-toggle:hover { text-decoration: underline; }
     .error {
       margin-top: 12px;
       padding: 12px;
@@ -265,9 +292,23 @@
 
     <div class="consent">
       <input type="checkbox" id="consent">
-      <label for="consent" style="margin:0; font-weight:400; color:#666;" data-i18n="book.consent">
-        我同意提供以上資料供本次到訪用途；資料將於 6 個月後自動刪除。
-      </label>
+      <div style="flex:1;">
+        <label for="consent" style="margin:0; font-weight:400; color:#666;" data-i18n="book.consent">
+          我已閱讀並同意以下個人資料蒐集告知事項。
+        </label>
+        <div>
+          <span class="privacy-toggle" onclick="togglePrivacy()" id="privacyToggle" data-i18n="book.privacyToggle">詳細個資告知 ▾</span>
+        </div>
+        <div class="privacy-details" id="privacyDetails" style="display:none;">
+          <h4 data-i18n="book.privacyTitle">個人資料蒐集告知</h4>
+          <p data-i18n="book.privacyPurpose">蒐集目的：訪客身分確認、到訪報到管理、保衛室人員核對、緊急聯絡。</p>
+          <p data-i18n="book.privacyItems">蒐集項目：姓名、聯絡電話、Email、公司/單位、車牌、預計到訪時間、受訪員工、備註，及員工邀約時自願提供之 VIP 照片。</p>
+          <p data-i18n="book.privacyPeriod">保存期限與方式：資料儲存於本公司 Firebase 雲端資料庫，限本次到訪用途使用；保存期限為 6 個月，逾期由管理人員定期清除。</p>
+          <p data-i18n="book.privacyRights">您的權利：依個人資料保護法，您得隨時聯絡本公司行使查詢、閱覽、補正、刪除等權利。</p>
+          <p data-i18n="book.privacyContact">聯絡窗口：杰興工業 行政部 ｜ contact@jye-shing.com.tw</p>
+          <p data-i18n="book.privacyNote">未提供以上資料可能影響到訪安排，敬請見諒。</p>
+        </div>
+      </div>
     </div>
 
     <div class="error" id="errorMsg"></div>
@@ -354,6 +395,12 @@
       el.textContent = msg;
       el.style.display = "block";
     }
+
+    window.togglePrivacy = function() {
+      const det = document.getElementById("privacyDetails");
+      const open = det.style.display !== "none";
+      det.style.display = open ? "none" : "block";
+    };
 
     window.submitBooking = async function() {
       const data = {
