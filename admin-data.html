@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="data.title">資料管理</title>
+  <script src="i18n.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: #f4f5f9;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .topbar {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 16px 22px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 980px;
+      margin: 0 auto 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .topbar h1 { font-size: 1.25rem; }
+    .topbar .user { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; }
+    .topbar button {
+      background: rgba(255,255,255,0.2);
+      color: white; border: none;
+      padding: 8px 14px; border-radius: 8px;
+      cursor: pointer; font-size: 0.88rem;
+    }
+    .topbar button:hover { background: rgba(255,255,255,0.3); }
+    .container { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    .panel {
+      background: white;
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .panel h2 {
+      font-size: 1.05rem;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .panel .desc { font-size: 0.86rem; color: #888; margin-bottom: 16px; line-height: 1.5; }
+
+    /* 總覽卡片 */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 600px) { .stats { grid-template-columns: 1fr; } }
+    .stat-card {
+      background: #f8f9ff;
+      border: 1px solid #e7eaff;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-label { font-size: 0.8rem; color: #888; margin-bottom: 4px; }
+    .stat-value { font-size: 1.4rem; font-weight: 700; color: #5a4eb8; }
+    .stat-value-sm { font-size: 0.95rem; font-weight: 600; color: #555; }
+
+    /* 表單元素 */
+    label {
+      display: block;
+      font-size: 0.88rem;
+      color: #555;
+      margin: 10px 0 6px;
+      font-weight: 600;
+    }
+    input[type="date"], select {
+      width: 100%;
+      max-width: 240px;
+      font-size: 0.95rem;
+      padding: 10px 12px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      outline: none;
+      color: #333;
+      font-family: inherit;
+      background: white;
+    }
+    input:focus, select:focus { border-color: #667eea; }
+    .row-inline { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+    .row-inline > div { flex: 1; min-width: 160px; }
+
+    .action-btn {
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+      margin-top: 12px;
+    }
+    .btn-danger { background: #c62828; }
+    .btn-danger:hover { opacity: 0.9; }
+    .btn-danger:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .btn-primary:hover { opacity: 0.92; }
+
+    .result {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      display: none;
+    }
+    .result.success { display: block; background: #e8f5e9; color: #2e7d32; }
+    .result.error { display: block; background: #ffebee; color: #c62828; }
+    .result.info { display: block; background: #e3f2fd; color: #1565c0; }
+
+    /* 登入畫面 */
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      padding: 40px 30px;
+      max-width: 380px;
+      margin: 80px auto 0;
+      text-align: center;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+    }
+    .login-card h2 { margin-bottom: 12px; color: #333; }
+    .login-card p { color: #888; margin-bottom: 24px; font-size: 0.9rem; }
+    .google-btn {
+      width: 100%;
+      padding: 14px;
+      background: white;
+      border: 1.5px solid #ddd;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #555;
+    }
+    .google-btn:hover { background: #f9f9f9; }
+    .footer-link { text-align: center; margin-top: 18px; font-size: 0.85rem; }
+    .footer-link a { color: #667eea; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <div id="loginView" style="display:none;">
+    <div class="login-card">
+      <div style="text-align:center; margin-bottom:14px;">
+        <div class="lang-switch">
+          <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+          <button data-lang="en"    onclick="setLang('en')">EN</button>
+          <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+        </div>
+      </div>
+      <h2>🔐 <span data-i18n="data.loginTitle">管理員登入</span></h2>
+      <p data-i18n="data.loginDesc">資料清除與匯出需登入 Google 帳號</p>
+      <button class="google-btn" onclick="signIn()" data-i18n="common.signIn">使用 Google 登入</button>
+      <div class="footer-link"><a href="visitor-index.html" data-i18n="common.back">← 回首頁</a></div>
+    </div>
+  </div>
+
+  <div id="mainView" style="display:none;">
+    <div class="topbar">
+      <h1>📦 <span data-i18n="data.title">資料管理</span></h1>
+      <div class="user">
+        <div class="lang-switch">
+          <button data-lang="zh-TW" onclick="setLang('zh-TW')">繁中</button>
+          <button data-lang="en"    onclick="setLang('en')">EN</button>
+          <button data-lang="vi"    onclick="setLang('vi')">TIẾNG VIỆT</button>
+        </div>
+        <span id="userEmail"></span>
+        <button onclick="signOutClick()" data-i18n="common.signOut">登出</button>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <!-- 總覽 -->
+      <div class="panel">
+        <h2 data-i18n="data.summaryTitle">📊 資料總覽</h2>
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-label" data-i18n="data.summaryTotal">總筆數</div>
+            <div class="stat-value" id="stat-total">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label" data-i18n="data.summaryEarliest">最早一筆</div>
+            <div class="stat-value-sm" id="stat-earliest">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label" data-i18n="data.summaryLatest">最新一筆</div>
+            <div class="stat-value-sm" id="stat-latest">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 清除舊資料 -->
+      <div class="panel">
+        <h2 data-i18n="data.cleanupTitle">🧹 清除舊資料</h2>
+        <p class="desc" data-i18n="data.cleanupDesc">保留期限到期後請定期手動清除（個資告知承諾 6 個月）</p>
+
+        <div class="row-inline">
+          <div>
+            <label data-i18n="data.cleanupSelectAge">保留多久之前的資料？</label>
+            <select id="cleanupAge" onchange="updateCleanupCount()">
+              <option value="3" data-i18n="data.cleanupAge3">3 個月以前</option>
+              <option value="6" data-i18n="data.cleanupAge6" selected>6 個月以前</option>
+              <option value="12" data-i18n="data.cleanupAge12">12 個月以前</option>
+            </select>
+          </div>
+          <div>
+            <div class="stat-label" id="cleanupCount" data-i18n="data.cleanupCount">符合清除條件：— 筆</div>
+          </div>
+        </div>
+
+        <button class="action-btn btn-danger" id="cleanupBtn" onclick="cleanupOld()">🗑 <span id="cleanupBtnLabel">刪除</span></button>
+        <div class="result" id="cleanupResult"></div>
+      </div>
+
+      <!-- 匯出 CSV -->
+      <div class="panel">
+        <h2 data-i18n="data.exportTitle">📥 匯出 CSV</h2>
+        <p class="desc" data-i18n="data.exportDesc">依日期區間下載完整訪客資料；UTF-8 with BOM（Excel 可直接開啟）</p>
+
+        <div class="row-inline">
+          <div>
+            <label data-i18n="data.exportFrom">起始日</label>
+            <input type="date" id="exportFrom">
+          </div>
+          <div>
+            <label data-i18n="data.exportTo">結束日</label>
+            <input type="date" id="exportTo">
+          </div>
+        </div>
+
+        <button class="action-btn btn-primary" onclick="exportCsv()" data-i18n="data.exportBtn">下載 CSV</button>
+        <div class="result" id="exportResult"></div>
+      </div>
+
+      <div class="footer-link"><a href="visitor-index.html" data-i18n="common.back">← 回首頁</a></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, where, orderBy, limit, Timestamp, deleteDoc, doc, writeBatch }
+      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7uHcuYxxo4YFyGj959grg8zlkT1wG4o8",
+      authDomain: "my-firebase-tools.firebaseapp.com",
+      projectId: "my-firebase-tools",
+      storageBucket: "my-firebase-tools.firebasestorage.app",
+      messagingSenderId: "757246006318",
+      appId: "1:757246006318:web:3d5dd95d646eeb38927bbf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let allVisitors = [];
+
+    function fmtDate(ts) {
+      if (!ts || !ts.toDate) return "—";
+      const d = ts.toDate();
+      const pad = n => String(n).padStart(2, "0");
+      return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`;
+    }
+
+    function fmtDateTime(ts) {
+      if (!ts || !ts.toDate) return "";
+      const d = ts.toDate();
+      const pad = n => String(n).padStart(2, "0");
+      return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+
+    function showResult(elId, type, text) {
+      const el = document.getElementById(elId);
+      el.className = "result " + type;
+      el.textContent = text;
+    }
+
+    async function loadAll() {
+      // 全量讀（小型專案 OK；上千筆以上要分頁）
+      const snap = await getDocs(query(collection(db, "visitors"), orderBy("visitAt", "asc")));
+      allVisitors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderStats();
+      updateCleanupCount();
+    }
+
+    function renderStats() {
+      document.getElementById("stat-total").textContent = allVisitors.length;
+      if (allVisitors.length === 0) {
+        document.getElementById("stat-earliest").textContent = "—";
+        document.getElementById("stat-latest").textContent = "—";
+      } else {
+        document.getElementById("stat-earliest").textContent = fmtDate(allVisitors[0].visitAt);
+        document.getElementById("stat-latest").textContent = fmtDate(allVisitors[allVisitors.length-1].visitAt);
+      }
+    }
+
+    function cutoffDate(months) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - months);
+      return d;
+    }
+
+    window.updateCleanupCount = function() {
+      const months = parseInt(document.getElementById("cleanupAge").value, 10);
+      const cutoff = cutoffDate(months);
+      const eligible = allVisitors.filter(v => v.visitAt && v.visitAt.toDate && v.visitAt.toDate() < cutoff);
+      const count = eligible.length;
+      document.getElementById("cleanupCount").textContent = t("data.cleanupCount", { count });
+      document.getElementById("cleanupBtnLabel").textContent = t("data.cleanupBtn", { count }).replace("🗑 ", "");
+      const btn = document.getElementById("cleanupBtn");
+      btn.disabled = count === 0;
+    };
+
+    window.cleanupOld = async function() {
+      const months = parseInt(document.getElementById("cleanupAge").value, 10);
+      const cutoff = cutoffDate(months);
+      const eligible = allVisitors.filter(v => v.visitAt && v.visitAt.toDate && v.visitAt.toDate() < cutoff);
+      if (eligible.length === 0) return;
+      if (!confirm(t("data.cleanupConfirm", { count: eligible.length }))) return;
+
+      const btn = document.getElementById("cleanupBtn");
+      btn.disabled = true;
+      try {
+        // Firestore batch 上限 500，分批刪
+        let deleted = 0;
+        for (let i = 0; i < eligible.length; i += 400) {
+          const chunk = eligible.slice(i, i + 400);
+          const batch = writeBatch(db);
+          chunk.forEach(v => batch.delete(doc(db, "visitors", v.id)));
+          await batch.commit();
+          deleted += chunk.length;
+        }
+        showResult("cleanupResult", "success", t("data.cleanupDone", { count: deleted }));
+        await loadAll();
+      } catch (e) {
+        showResult("cleanupResult", "error", t("data.cleanupFail", { msg: e.message }));
+        btn.disabled = false;
+      }
+    };
+
+    // ---- CSV 匯出 ----
+    function csvCell(v) {
+      if (v == null) return "";
+      let s = String(v);
+      // 含逗號、引號、換行 → 用引號包並 escape 引號
+      if (/[",\n\r]/.test(s)) {
+        s = '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }
+
+    const CSV_HEADERS = [
+      "id","name","phone","email","company","hostName","hostEmail",
+      "visitAt","plateNumber","note","status","source",
+      "isVip","approvedBy","approvedAt","checkedInAt","checkedOutAt",
+      "createdAt","updatedAt"
+    ];
+
+    window.exportCsv = async function() {
+      const fromStr = document.getElementById("exportFrom").value;
+      const toStr = document.getElementById("exportTo").value;
+      let from = null, to = null;
+      if (fromStr) from = new Date(fromStr + "T00:00:00");
+      if (toStr) { to = new Date(toStr + "T23:59:59"); }
+
+      const filtered = allVisitors.filter(v => {
+        if (!v.visitAt || !v.visitAt.toDate) return false;
+        const d = v.visitAt.toDate();
+        if (from && d < from) return false;
+        if (to && d > to) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        showResult("exportResult", "info", t("data.exportEmpty"));
+        return;
+      }
+
+      try {
+        const lines = [CSV_HEADERS.join(",")];
+        for (const v of filtered) {
+          const row = CSV_HEADERS.map(h => {
+            if (["visitAt","approvedAt","checkedInAt","checkedOutAt","createdAt","updatedAt"].includes(h)) {
+              return csvCell(fmtDateTime(v[h]));
+            }
+            return csvCell(v[h]);
+          });
+          lines.push(row.join(","));
+        }
+        // UTF-8 with BOM
+        const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const today = new Date().toISOString().slice(0,10);
+        a.href = url; a.download = `visitors-${today}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showResult("exportResult", "success", t("data.exportDone", { count: filtered.length }));
+      } catch (e) {
+        showResult("exportResult", "error", t("data.exportFail", { msg: e.message }));
+      }
+    };
+
+    // 預設日期區間：最近 1 個月
+    (function setDefaultDates() {
+      const today = new Date();
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+      document.getElementById("exportFrom").value = fmt(monthAgo);
+      document.getElementById("exportTo").value = fmt(today);
+    })();
+
+    document.addEventListener("i18n:changed", () => {
+      // 重新計算 cleanup count 的 i18n 文字
+      if (allVisitors.length > 0) updateCleanupCount();
+    });
+
+    window.signIn = async function() {
+      try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+      catch (e) { alert("Sign-in failed: " + e.message); }
+    };
+    window.signOutClick = async function() { await signOut(auth); };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        document.getElementById("loginView").style.display = "none";
+        document.getElementById("mainView").style.display = "block";
+        document.getElementById("userEmail").textContent = user.email;
+        await loadAll();
+      } else {
+        document.getElementById("loginView").style.display = "block";
+        document.getElementById("mainView").style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -11,7 +11,7 @@ service cloud.firestore {
     //  create: 匿名只能建立 pending；登入使用者（員工邀約）可直接建 approved
     //  read:   任何人可讀（訪客憑 token 查自己、保衛室列出今日清單）
     //  update: 僅登入使用者可更新（核可、報到、退件）
-    //  delete: 禁止（保留稽核紀錄）
+    //  delete: 僅登入使用者可刪除（admin-data 清除舊資料工具用）
     match /visitors/{visitorId} {
       allow create: if request.resource.data.qrToken is string
                     && request.resource.data.name is string
@@ -22,7 +22,7 @@ service cloud.firestore {
                     );
       allow read: if true;
       allow update: if request.auth != null;
-      allow delete: if false;
+      allow delete: if request.auth != null;
     }
 
     // VIP 名冊：僅登入使用者可讀寫
